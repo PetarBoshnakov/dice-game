@@ -161,6 +161,7 @@ class Game_Stats():
         #TODO
         pass
 
+
 class CommandInterface:
     '''
     Summary:
@@ -218,7 +219,7 @@ class CommandInterface:
 
         num = cmd.split(' ')[0]
         
-        if self.checkInt(num):
+        if isinstance(num, int):
             return int(num)
         else:
             print('Please provide correct number format')
@@ -244,34 +245,12 @@ class CommandInterface:
         
         valsInt = []
         for val in vals:
-            self.checkInt(val)
-            valsInt.append(int(val))
+            if isinstance(val, int):
+                valsInt.append(int(val))
+            else:
+                print(f"Wrong bid format: {cmd}. Format must be 'int int'")
         return valsInt
         
-
-    def checkInt(self, val: str):
-        '''
-        Summary:
-        ---
-        checks whether a value is of type int
-
-        Parameters:
-        ---
-        
-        val: a text value to be checked
-
-        Returns:
-        ---
-        return True if the value is int or False if the value is not
-
-        '''
-
-        try:
-            int(val)
-            return True
-        except ValueError: 
-            return False
-
 
 class Game_Controller:
     
@@ -331,9 +310,10 @@ class Game_Controller:
         selectionN: a selectin number item (starting index 1) that indicates 
         which menu item should be returned
         '''
+
         lenMenu = len(menu)
         nArr = int(selectionN) - 1
-        if nArr < 0 or nArr > lenMenu - 1:
+        if not isinstance(selectionN, int) or nArr < 0 or nArr > lenMenu - 1:
             return False
         return True  
 
@@ -347,22 +327,45 @@ class Game_Controller:
         for order,val in enumerate(vals, start=1):
             print(f'{order}. {val}')
 
-    def updateLog(self, player, bid):
-        #TODO
+    def setNplayers(self, num: int) -> None:
         '''
         Summary:
         ---
-        updates game stats after game end
+        Sets the number of players for the game
 
         Parameters:
         ---
-        stats:
 
-        lots:
+        num: the number of players 
         '''
-        #TODO
-        pass
-    
+
+        if not isinstance(num, int) or num < 2:
+            print(f"Invalid number of players: {num}. The number of players must be an integer greater than 1. Number of players set to default - 2")
+            self.nPlayers = 2
+        else:
+            self.nPlayers = num    
+        
+
+    def setGameMode(self, mode) -> None:
+        '''
+        Summary:
+        ---
+        Sets the game mode. Defaults to classic if invalid game mode is set
+
+        Parameters:
+        ---
+
+        mode: the mode to be set - 'classic' or 'wild'
+        '''
+
+        vars = ['classic', 'wild']
+        if mode in vars:
+            self.gameMode = mode
+        else:
+            print(f"Invalid game mode - {mode}! Mode can be only 'classic' or 'wild' Game mode set to default (classic)")
+            self.gameMode = vars[0]
+
+   
     def updateGameStats(self, stats):
         #TODO
         '''
