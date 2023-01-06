@@ -1,4 +1,5 @@
 import sys
+import random
 
 class Player:
     '''
@@ -24,7 +25,7 @@ class Bot(Player):
     Defines the actions that a bot can take
     '''
     def isWildMode(self):
-        if Game_Controller.gameMode == 'wild':
+        if GameController.gameMode == 'wild':
             return True
         return False
     
@@ -57,11 +58,26 @@ class Bot(Player):
         #TODO
         pass
     
-class Game_Stats():
+class GameStats():
     '''
     Summary:
     ---
     Keeps the current game log - active players, who's turn is, what are the bids so far
+
+    Attributes:
+    ---
+    
+    nPlayers: number of players in the game
+
+    nDice: number of dices
+
+    playerStats: dictionary to hold the player stats: 
+        current bid
+            face 
+            count 
+        status call - 'bid' or 'liar'
+
+    currentPlayer: keeps track of the current player in the player stats
     '''
 
     def __init__(self, nplayers):
@@ -74,11 +90,21 @@ class Game_Stats():
         ---
         nPlayers:
         '''
-        self.nPlayers = nplayers
+        if isinstance(nplayers,int):
+            self.nPlayers = nplayers    
+        else:
+            print(f'{nplayers} is not valid input. The number of players must be an integer. The player count is set to the default: 2')
+            self.nPlayers = 2
+
         self.nDice = nplayers * 5
         self.playerStats = {}
+
+        # initializes the players DB
         self.ini_players()
-    
+
+        # sets a random player for game start
+        self.currentPlayer = random.randrange(start= 0,stop= nplayers-1,step= 1)
+
     def ini_players(self):    
         '''
         Summary:
@@ -87,9 +113,10 @@ class Game_Stats():
         '''
         
         for i in range(1,self.nPlayers + 1):
-            self.playerStats[f'Player {i}'] = []
+            playerX = Player(f'Player {i}')
+            self.playerStats[playerX.Name] = {'Face': 0, 'Count': 0, 'Status': None}
 
-    def updatePlayerStats(self, player, stats):
+    def updatePlayerStats(self, player, bid):
         #TODO
         '''
         Summary:
@@ -98,26 +125,17 @@ class Game_Stats():
 
         Parameters:
         ---
-        player:
 
-        stats: 
-        '''
-        if self.isValidStatsFormat(stats):
-            self.playerStats[player].append(stats)
+        player: the player name to be updated in the stats dictionary
 
-    def isValidStatsFormat(self, stats) -> bool:
-        #TODO
-        '''
-        Summary:
-        ---
-        Check if provided stats are valid. 
+        bid: holds the bid value in a list 
 
-        Parameters:
-        ---
-        stats: holds the last bid of a player 
-        and the number of dice they have in the format: [face, nFaces, nDice]
         '''
-        pass
+        face = bid[0]
+        count = bid[1]
+        if self.isValidStatsFormat(bid):
+            self.playerStats[player]['Face'] = face
+            self.playerStats[player]['Count'] = count
 
     def getPlayerStats(self, player):
         #TODO
@@ -184,6 +202,10 @@ class CommandInterface:
        
         type: the type of command as string a 'bid' or 'num'
 
+        Returns:
+        ---
+        the input from the interface
+
         '''
 
         # type = ['num', 'bid']
@@ -213,15 +235,16 @@ class CommandInterface:
 
         Returns:
         ---
-        returns the number for the command after checking or ValueError if wrong
+        returns the number for the command after checking
         format was given
         '''
 
         num = cmd.split(' ')[0]
         
-        if isinstance(num, int):
-            return int(num)
-        else:
+        try:
+            val = int(num)
+            return val
+        except:
             print('Please provide correct number format')
             return None
 
@@ -252,7 +275,7 @@ class CommandInterface:
         return valsInt
         
 
-class Game_Controller:
+class GameController:
     
     '''
     Summary:
@@ -261,6 +284,9 @@ class Game_Controller:
     '''
 
     def __init__(self) -> None:
+        #TODO
+        # develop the game menu navigation - menus and a menu navigation with 
+        # self.gameMenu_currentMenu that keeps track of the menu layers and sublayers
         '''
         Summary:
         ---
@@ -270,11 +296,9 @@ class Game_Controller:
         self.gameMode = 'classic' # classic (default) or wild
         self.gameLog = []
 
-        self.gameMenu = ['New game', 'Exit']
-        self.gameMode = ['classic', 'wild']
-        self.GameMenu_newGame = ['Start', 'Number of players', 'Game mode']
-        self.numPlayers = ['Set number of players']
-
+        self.gameMenu_startScreen = ['New game', 'Exit']
+        self.gameMenu_newGame = ['Start', 'Number of players', 'Game mode']
+        self.gameMenu_currentMenu = 0
 
     def selectFromMenu(self, menu: list, selectionN: int) -> str:
         '''
@@ -296,6 +320,9 @@ class Game_Controller:
             return menu[retVal]
         else:
             return None
+    
+    def cu(self, menu):
+        pass
 
     def checkValidSelection(self, menu: list, selectionN: int) -> bool:
         '''
@@ -315,7 +342,23 @@ class Game_Controller:
         nArr = int(selectionN) - 1
         if not isinstance(selectionN, int) or nArr < 0 or nArr > lenMenu - 1:
             return False
-        return True  
+        return True
+    
+    def checkValidBid(self, bid):
+        #TODO
+        '''
+        Summary:
+        ---
+        Checks if the bid is valid
+
+
+        Parameters:
+        ---
+
+        bid: The bid cannot consists of more faces than the available dice number
+        '''
+        #TODO
+        pass   
 
     def printVals(self, vals: list) -> None:
         '''
@@ -340,7 +383,7 @@ class Game_Controller:
         '''
 
         if not isinstance(num, int) or num < 2:
-            print(f"Invalid number of players: {num}. The number of players must be an integer greater than 1. Number of players set to default - 2")
+            print(f"Invalid number of players: {num}. The number of players must be an integer greater than 1. Number of players set to default: 2")
             self.nPlayers = 2
         else:
             self.nPlayers = num    
@@ -362,8 +405,8 @@ class Game_Controller:
         if mode in vars:
             self.gameMode = mode
         else:
-            print(f"Invalid game mode - {mode}! Mode can be only 'classic' or 'wild' Game mode set to default (classic)")
-            self.gameMode = vars[0]
+            print(f"Invalid game mode - {mode}! Mode can be only 'classic' or 'wild' Game mode set to default: 'classic'")
+            self.gameMode = 'classic'
 
    
     def updateGameStats(self, stats):
@@ -382,20 +425,4 @@ class Game_Controller:
         #TODO
         pass
 
-    def checkValidBid(self, bid):
-        #TODO
-        '''
-        Summary:
-        ---
-        Checks if the bid is valid
-
-
-        Parameters:
-        ---
-
-        bid: The bid cannot consists of more faces than the available dice number
-        '''
-        #TODO
-        pass
-
-
+    
