@@ -320,9 +320,6 @@ class GameController:
         else:
             return None
     
-    def cu(self, menu):
-        pass
-
     def checkValidSelection(self, menu: list, selectionN: int) -> bool:
         '''
         Summary:
