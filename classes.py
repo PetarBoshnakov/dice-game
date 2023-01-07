@@ -297,8 +297,7 @@ class GameController:
         self.gameLog = []
 
         self.gameMenu_startScreen = ['New game', 'Exit']
-        self.gameMenu_newGame = ['Start', 'Number of players', 'Game mode']
-        self.gameMenu_currentMenu = 0
+        self.gameMenu_newGame = ['Start', 'Number of players', 'Game mode', 'Back']
 
     def selectFromMenu(self, menu: list, selectionN: int) -> str:
         '''
