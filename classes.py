@@ -1,5 +1,7 @@
 import sys
 import random
+import uuid
+import misc
 
 class Player:
     '''
@@ -77,33 +79,54 @@ class GameStats():
             count 
         status call - 'bid' or 'liar'
 
-    currentPlayer: keeps track of the current player in the player stats
     '''
 
     def __init__(self, nplayers):
-        #TODO
         '''
         Symmary: 
         ---
+        Holds the current game stats and creates a game log.
+        playerStats:
+            -Face - the dice face
+            -Count - number of dice faces in the game
+            -DiceN - current player dice
+            -Hand - current player hand
+            -Status - Bid, Liar, Out, Won
+
 
         Parameters:
         ---
-        nPlayers:
+        nplayers: the number of players to be set for the class intialization
+        
         '''
-        if isinstance(nplayers,int):
-            self.nPlayers = nplayers    
-        else:
-            print(f'{nplayers} is not valid input. The number of players must be an integer. The player count is set to the default: 2')
-            self.nPlayers = 2
 
+        self.nPlayers = self.setNPlayers(nplayers)
         self.nDice = nplayers * 5
         self.playerStats = {}
 
         # initializes the players DB
         self.ini_players()
+    
+    def setNPlayers(self, nplayers):
+        '''
+        Summary:
+        ---
+        Sets the number of players for the class
 
-        # sets a random player for game start
-        self.currentPlayer = random.randrange(start= 0,stop= nplayers-1,step= 1)
+        Parameters:
+        ---
+        nplayers: the number of players to be set for the game.
+
+        Returns:
+        ---
+        nplayers or 2 if the conditions are not met
+        '''
+        if isinstance(nplayers,int):
+            return nplayers    
+        else:
+            misc.printSep()
+            print(f'{nplayers} is not valid input. The number of players must be an integer. The player count is set to the default: 2')
+            return 2
 
     def ini_players(self):    
         '''
@@ -114,9 +137,49 @@ class GameStats():
         
         for i in range(1,self.nPlayers + 1):
             playerX = Player(f'Player {i}')
-            self.playerStats[playerX.Name] = {'Face': 0, 'Count': 0, 'Status': None}
+            hand = GameController.gameGenerateHand(self)
+            self.playerStats[playerX.Name] = {'ID': i-1,'Face': 0, 'Count': 0, 'DiceN': 5, 'Hand': hand, 'Status': 'Not set'}
 
-    def updatePlayerStats(self, player, bid):
+    def getGameState(self):
+        '''
+        Returns:
+        ---
+        Dictionary with the current players information
+        '''
+        return self.playerStats
+
+
+    def getPlayerStats(self, player):
+        #TODO
+        '''
+        Summary:
+        ---
+        Get the player's stats
+
+        Parameters:
+        ---
+        player: 
+
+        Returns:
+        All game moves of the player by game id
+        '''
+        return self.playerStats[player]  
+
+    def getnDice(self):
+        '''
+        Summary:
+        ---
+        Returns the global number of dice
+        '''
+
+        diceN = 0
+        keys = self.playerStats.keys()
+        for key in keys:
+            diceN += self.playerStats[key]['DiceN']
+
+        return diceN
+
+    def updatePlayerStats(self, player, stats):
         #TODO
         '''
         Summary:
@@ -137,47 +200,9 @@ class GameStats():
             self.playerStats[player]['Face'] = face
             self.playerStats[player]['Count'] = count
 
-    def getPlayerStats(self, player):
-        #TODO
-        '''
-        Summary:
-        ---
-        Get the player's stats
-
-        Parameters:
-        ---
-        player: 
-        '''
-        return self.playerStats[player]
-
-    def isPlayerOut(self, player):
-        #TODO
-        '''
-        Summary:
-        ---
-        flags a player as lost the game
-
-        Parameters:
-        ---
-        player:
-        '''
-        #TODO
-        pass
-    
-
-    def isPlayerWinner(self, player):
-        #TODO
-        '''
-        Summary:
-        ---
-        flags a player as game winner
-
-        Parameters:
-        ---
-        player: 
-        '''
-        #TODO
-        pass
+    def generateUUID(self):
+      
+        return uuid.uuid4()
 
 
 class CommandInterface:
@@ -245,6 +270,7 @@ class CommandInterface:
             val = int(num)
             return val
         except:
+            misc.printSep()
             print('Please provide correct number format')
             return None
 
@@ -264,16 +290,23 @@ class CommandInterface:
         ---
         list of values
         '''
+        if cmd == 'liar':
+            return cmd
+        
         vals = cmd.split(' ')
         
         valsInt = []
         for val in vals:
-            if isinstance(val, int):
+            try:
+                int(val)
                 valsInt.append(int(val))
-            else:
-                print(f"Wrong bid format: {cmd}. Format must be 'int int'")
+            except:
+                misc.printSep()
+                print(f"Wrong bid format: {cmd}. Format must be 'int int' or 'liar' !")
+                return [-1,-1]
         return valsInt
-        
+            
+
 
 class GameController:
     
@@ -284,20 +317,18 @@ class GameController:
     '''
 
     def __init__(self) -> None:
-        #TODO
-        # develop the game menu navigation - menus and a menu navigation with 
-        # self.gameMenu_currentMenu that keeps track of the menu layers and sublayers
         '''
         Summary:
         ---
         Ini the GameController
         '''
-        self.nPlayers = 0
+        self.nPlayers = 2
         self.gameMode = 'classic' # classic (default) or wild
         self.gameLog = []
 
         self.gameMenu_startScreen = ['New game', 'Exit']
         self.gameMenu_newGame = ['Start', 'Number of players', 'Game mode', 'Back']
+        self.currentPlayer = 0
 
     def selectFromMenu(self, menu: list, selectionN: int) -> str:
         '''
@@ -340,8 +371,7 @@ class GameController:
             return False
         return True
     
-    def checkValidBid(self, bid):
-        #TODO
+    def isValidBid(self, bid: list, ndice: int) -> bool:
         '''
         Summary:
         ---
@@ -352,9 +382,20 @@ class GameController:
         ---
 
         bid: The bid cannot consists of more faces than the available dice number
+        
+        Returns:
+        ---
+        True if valid. False if invalid
         '''
-        #TODO
-        pass   
+        
+        if bid == 'liar':
+            return True 
+        elif (bid[0] < ndice and bid[0] > 0 and bid[0] < 6):
+            return True
+
+        else: 
+            return False
+        
 
     def printVals(self, vals: list) -> None:
         '''
@@ -365,6 +406,26 @@ class GameController:
 
         for order,val in enumerate(vals, start=1):
             print(f'{order}. {val}')
+    
+    def printGameState(self, gameStats: dict, currentPlayer: int):
+        '''
+        Summary:
+        ---
+        Prints the game state
+
+        Parameters:
+        ---
+        gameStats: the stats to be printed
+
+        currentPlayer: the current Player index - decides whose turn it is
+        '''
+
+        playerVals = gameStats.keys()
+        for cntr, playerVal in enumerate(playerVals):
+            if currentPlayer == cntr:
+                print(f'==>{playerVal}: {gameStats[playerVal]}')
+            else:
+                print(f'   {playerVal}: {gameStats[playerVal]}')
 
     def setNplayers(self, num: int) -> None:
         '''
@@ -379,11 +440,31 @@ class GameController:
         '''
 
         if not isinstance(num, int) or num < 2:
+            misc.printSep()
             print(f"Invalid number of players: {num}. The number of players must be an integer greater than 1. Number of players set to default: 2")
+            
             self.nPlayers = 2
         else:
             self.nPlayers = num    
+
+    def setNextPlayer(self):
+        '''
+        Summary:
+        ---
+        Increments the current player so it is now next player's turn.
+        '''
+        if self.currentPlayer + 1 == self.nPlayers:
+            self.currentPlayer = 0
+        else: self.currentPlayer += 1
         
+    def setCurrentPlayer(self: int):
+        '''
+        Summary:
+        Sets a random player for game start
+        ---
+        '''
+
+        self.currentPlayer = random.randrange(start= 0,stop= self.nPlayers,step= 1)
 
     def setGameMode(self, mode) -> None:
         '''
@@ -401,24 +482,16 @@ class GameController:
         if mode in vars:
             self.gameMode = mode
         else:
+            misc.printSep()
             print(f"Invalid game mode - {mode}! Mode can be only 'classic' or 'wild' Game mode set to default: 'classic'")
-            self.gameMode = 'classic'
 
-   
-    def updateGameStats(self, stats):
-        #TODO
+    def gameGenerateHand(self):
         '''
         Summary:
         ---
-        updates game stats after game end
-
-        Parameters:
-        ---
-        stats:
-
-        lots:
+        Generates a hand based on dice values
         '''
-        #TODO
-        pass
+        vals = [1,2,3,4,5,6]
+        return  [random.choice(vals) for i in range(len(vals))]
 
     
