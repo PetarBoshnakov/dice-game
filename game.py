@@ -88,7 +88,7 @@ def playGame(game: classes.GameController):
     '''
 
     cmdI = classes.CommandInterface()
-    currentGameStats = classes.GameController(game.nPlayers)
+    game = classes.GameController(game.nPlayers)
     game.setStartCurrentPlayer()
 
     print("Bid in the form of 'int int' or 'liar'. Press 'q' to quit the current game.")
@@ -100,40 +100,40 @@ def playGame(game: classes.GameController):
         misc.printSep()
 
         # print game state
-        game.printGameState(currentGameStats.getGameState(), game.currentPlayer)
+        game.printGameState()
         
         # get current player input
         cmd = cmdI.getCmd('Your bid: ', 'bid')
         playerBid = cmd
-        if cmd == 'liar':
+        if cmd == 'liar' and turnCounter > 0:
             prevPlayer = game.getPrevPlayer()
             currPlayer = game.getCurrentPlayer()
-            diceCounts = currentGameStats.getDiceStats()
-            prevPlayerStats = currentGameStats.getPlayerStats(prevPlayer)
-            currPlayerStats = currentGameStats.getPlayerStats(currPlayer)
-            prevPlayerFace = currentGameStats.getPlayerStats(prevPlayer)['Face']
-            prevPlayerCount = currentGameStats.getPlayerStats(prevPlayer)['Count']
+            diceCounts = game.getDiceStats()
+            prevPlayerStats = game.getPlayerStats(prevPlayer)
+            currPlayerStats = game.getPlayerStats(currPlayer)
+            prevPlayerFace = game.getPlayerStats(prevPlayer)['Face']
+            prevPlayerCount = game.getPlayerStats(prevPlayer)['Count']
 
-            if diceCounts[prevPlayerFace] != prevPlayerCount:
-                print(f"{prevPlayerStats['Name']} loses 1 die")
-                currentGameStats.setDiceDecr(prevPlayer)
-                currentGameStats.setNextRound()
+            if diceCounts[prevPlayerFace] >= prevPlayerCount:
+                print(f"{currPlayer['Name']} loses 1 die")
+                game.setDiceDecr(currPlayer)
+                game.setNextRound()
                 turnCounter = 0
                 continue
 
-            if diceCounts[prevPlayerFace] == prevPlayerCount:
-                print(f"{currPlayerStats['Name']} loses 1 die")
-                currentGameStats.setDiceDecr(currPlayer)
-                currentGameStats.setNextRound()
+            else:
+               # diceCounts[prevPlayerFace] == prevPlayerCount:
+                print(f"{prevPlayer['Name']} loses 1 die")
+                game.setDiceDecr(prevPlayer)
+                game.setNextRound()
                 turnCounter = 0
                 continue
-        
         
         # check for input on first round
         # if invalid input - again
-        validBid = game.isValidBid(cmd, currentGameStats.getnDice())
+        validBid = game.isValidBid(cmd, game.getnDice())
         if turnCounter == 0 and validBid:
-            currentGameStats.setPlayerBid(game.currentPlayer,playerBid)
+            game.setPlayerBid(game.currentPlayer,playerBid)
             game.setNextPlayer()
             turnCounter += 1
             continue
@@ -142,8 +142,8 @@ def playGame(game: classes.GameController):
         
         # checks the input on after 1st round
         prevPlayer = game.getPrevPlayer()
-        prevPlayerStats = currentGameStats.getPlayerStats(prevPlayer)
-        if not game.isValidBid(cmd, currentGameStats.getnDice(), prevPlayerStats):
+        prevPlayerStats = game.getPlayerStats(prevPlayer)
+        if not game.isValidBid(cmd, game.getnDice(), prevPlayerStats):
             continue
         
         # updates player stats if the input is correct and liar has not been called
@@ -151,7 +151,7 @@ def playGame(game: classes.GameController):
 
 
         # continue to next player
-        currentGameStats.setPlayerBid(game.getCurrentPlayer(),cmd)
+        game.setPlayerBid(game.getCurrentPlayer(),cmd)
         game.setNextPlayer()
         turnCounter += 1
         

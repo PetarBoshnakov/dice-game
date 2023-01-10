@@ -195,7 +195,7 @@ class GameController():
         
         for i in range(1,self.nPlayers + 1):
             playerX = Player(f'Player {i}')
-            hand = GameController.gameGenerateHand(self,6)
+            hand = self.gameGenerateHand(6)
             self.playerStats[i-1] = {
                 'Name': playerX.Name,
                 'Face': 0, 
@@ -217,7 +217,7 @@ class GameController():
         ---
         A dictionary containing the values and their counts in the game        
         '''
-        players = self.nPlayers - 1
+        players = self.nPlayers
         
         dicevals = []
         for player in range(players):
@@ -283,7 +283,7 @@ class GameController():
         '''
         return self.playerStats
 
-    def printGameState(self, gameStats: dict, currentPlayer: int):
+    def printGameState(self):
         '''
         Summary:
         ---
@@ -296,12 +296,12 @@ class GameController():
         currentPlayer: the current Player index - decides whose turn it is
         '''
 
-        playerVals = gameStats.keys()
+        playerVals = self.playerStats.keys()
         for cntr, playerVal in enumerate(playerVals):
-            if currentPlayer == cntr:
-                print(f'==>{playerVal}: {gameStats[playerVal]}')
+            if self.currentPlayer == cntr:
+                print(f'==>{playerVal}: {self.playerStats[playerVal]}')
             else:
-                print(f'   {playerVal}: {gameStats[playerVal]}')
+                print(f'   {playerVal}: {self.playerStats[playerVal]}')
     
     def setCurrentPlayer(player):
         '''
@@ -351,9 +351,14 @@ class GameController():
         ---
         Increments the current player so it is now next player's turn.
         '''
+
         if self.currentPlayer + 1 == self.nPlayers:
             self.currentPlayer = 0
-        else: self.currentPlayer += 1
+        else: 
+            self.currentPlayer += 1 
+
+        if self.playerStats[self.currentPlayer]['Status'] == 'out':
+            self.setNextPlayer()
 
     def setNextRound(self):
         '''
@@ -372,7 +377,7 @@ class GameController():
             players[player]['Face'] = 0
             players[player]['Count'] = 0
             playerDiceN = players[player]['DiceN']
-            players[player]['Hand'] = GameController.gameGenerateHand(self,playerDiceN)
+            players[player]['Hand'] = self.gameGenerateHand(playerDiceN)
             
     def setNplayers(self, num: int) -> None:
         '''
