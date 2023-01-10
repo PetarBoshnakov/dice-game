@@ -28,45 +28,46 @@ def gameMenu():
     ---
     Iterates the game menus and starts the game
     '''
-    game = classes.GameController()
+    gameMenu = classes.GameMenu()
     cmdI = classes.CommandInterface()
+    gameN = classes.GameController(2)
 
-    currMenu = game.gameMenu_startScreen
+    currMenu = gameMenu.gameMenu_startScreen
     pathStack = []
     pushMenu(pathStack,currMenu)
     while True:
         
         misc.printSep()
         currMenu = pathStack[-1]
-        game.printVals(currMenu)
+        gameMenu.printVals(currMenu)
 
         prompt = 'Please select option: '
         cmd = cmdI.getCmd(prompt,'num')
         
         while cmd == None:
             cmd = cmdI.getCmd(prompt,'num')
-        selection = game.selectFromMenu(currMenu, cmd)
+        selection = gameMenu.selectFromMenu(currMenu, cmd)
         
 
         if selection == 'New game':
-            pushMenu(pathStack, game.gameMenu_newGame)
-            game.printVals(currMenu)
+            pushMenu(pathStack, gameMenu.gameMenu_newGame)
+            gameMenu.printVals(currMenu)
 
         elif selection == 'Start':
             print('start game')
-            playGame(game) 
+            playGame(gameN) 
 
         elif selection == 'Number of players':
             prompt = 'Please enter the number of players (default is 2): '
             cmd = cmdI.getCmd(prompt, 'num')
-            game.setNplayers(cmd)
-            print(f'Number of players: {game.nPlayers}')
+            gameN.setNplayers(cmd)
+            print(f'Number of players: {gameN.nPlayers}')
 
         elif selection == 'Game mode':
             prompt = "Please enter the game mode - it can only be 'classic' or 'wild': "
             cmd = input(prompt)
-            game.setGameMode(cmd)
-            print(f'Game mode: {game.gameMode}')
+            gameN.setGameMode(cmd)
+            print(f'Game mode: {gameN.gameMode}')
 
         elif selection == 'Exit':
             print('Sad to see you go ;(')
@@ -87,8 +88,8 @@ def playGame(game: classes.GameController):
     '''
 
     cmdI = classes.CommandInterface()
-    currentGameStats = classes.GameStats(game.nPlayers)
-    game.setCurrentPlayer()
+    currentGameStats = classes.GameController(game.nPlayers)
+    game.setStartCurrentPlayer()
 
     print("Bid in the form of 'int int' or 'liar'. Press 'q' to quit the current game.")
     
@@ -106,26 +107,33 @@ def playGame(game: classes.GameController):
         playerBid = cmd
         if cmd == 'liar':
             prevPlayer = game.getPrevPlayer()
+            currPlayer = game.getCurrentPlayer()
             diceCounts = currentGameStats.getDiceStats()
             prevPlayerStats = currentGameStats.getPlayerStats(prevPlayer)
-            currPlayerStats = currentGameStats.getPlayerStats(game.getCurrentPlayer())
+            currPlayerStats = currentGameStats.getPlayerStats(currPlayer)
             prevPlayerFace = currentGameStats.getPlayerStats(prevPlayer)['Face']
             prevPlayerCount = currentGameStats.getPlayerStats(prevPlayer)['Count']
 
             if diceCounts[prevPlayerFace] != prevPlayerCount:
                 print(f"{prevPlayerStats['Name']} loses 1 die")
-                break
+                currentGameStats.setDiceDecr(prevPlayer)
+                currentGameStats.setNextRound()
+                turnCounter = 0
+                continue
+
             if diceCounts[prevPlayerFace] == prevPlayerCount:
                 print(f"{currPlayerStats['Name']} loses 1 die")
-                break
-
+                currentGameStats.setDiceDecr(currPlayer)
+                currentGameStats.setNextRound()
+                turnCounter = 0
+                continue
         
         
         # check for input on first round
         # if invalid input - again
         validBid = game.isValidBid(cmd, currentGameStats.getnDice())
         if turnCounter == 0 and validBid:
-            currentGameStats.updatePlayerBid(game.currentPlayer,playerBid)
+            currentGameStats.setPlayerBid(game.currentPlayer,playerBid)
             game.setNextPlayer()
             turnCounter += 1
             continue
@@ -143,7 +151,7 @@ def playGame(game: classes.GameController):
 
 
         # continue to next player
-        currentGameStats.updatePlayerBid(game.getCurrentPlayer(),cmd)
+        currentGameStats.setPlayerBid(game.getCurrentPlayer(),cmd)
         game.setNextPlayer()
         turnCounter += 1
         

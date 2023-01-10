@@ -62,18 +62,11 @@ class Bot(Player):
         #TODO
         pass
     
-class GameStats():
+class GameController():
     '''
     Summary:
     ---
-    Keeps the current game log - active players, who's turn is, what are the bids so far
-
-    Attributes:
-    ---
-    
-    nPlayers: number of players in the game
-
-    nDice: number of dices
+    Tha game controller runs the game
 
     playerStats: dictionary to hold the player stats: 
         current bid
@@ -102,6 +95,8 @@ class GameStats():
         
         '''
 
+        self.gameMode = 'classic' # classic (default) or wild
+        self.gameLog = []
         self.nPlayers = self.setNPlayers(nplayers)
         self.nDice = nplayers * 5
         self.playerStats = {}
@@ -109,6 +104,67 @@ class GameStats():
         # initializes the players DB
         self.ini_players()
     
+    def isValidBid(self, bid: list, ndice: int, prevPlayerStats = None) -> bool:
+        '''
+        Summary:
+        ---
+        Checks for bid validy. The bid count cannot be higher than what's on the
+        table and the die must have a valid face. Previous player must have a higher face
+        or higher count of the same face.
+
+
+        Parameters:
+        ---
+
+        bid: a list containing the opening bid parameters
+
+        ndice: the number of dice in the game
+        
+        prevPlayerStats: a dictionary containing the stats of the previous player
+
+        Returns:
+        ---
+        True if valid. False if invalid
+        '''
+
+        if prevPlayerStats == None:
+            bidInLimit = bid[0] > 0 and bid[0] <= 6 and bid[1] > 0 and bid[1] < ndice 
+
+            if bidInLimit:
+                return True
+            else:
+                print('the dice must have a valid side and adequate face count')
+                return False
+
+        if bid == 'liar':
+            return True
+
+        currentPlayerFace = bid[0]
+        currentPlayerCount = bid[1]
+        prevPlayerFace = prevPlayerStats['Face']
+        prevPlayerCount = prevPlayerStats['Count']
+
+        bidInLimit = bid[0] > 0 and bid[0] <= 6 and bid[1] > 0 and bid[1] < ndice
+        
+        # higher face
+        currPlayerFaceHigher = bidInLimit and currentPlayerFace > prevPlayerFace
+        currPlayerGeFace = bidInLimit and currentPlayerFace >= prevPlayerFace
+        # equal faces but higher count 
+        currPlayerHigherCount =  bidInLimit and currPlayerGeFace and currentPlayerCount > prevPlayerCount
+
+        if not bidInLimit:
+            print('the dice must have a valid side and adequate face count')
+        
+        if not currPlayerGeFace:
+            print('current player incorrect face')
+            
+        if not currPlayerHigherCount:
+            print('current player incorrect count')
+
+
+
+        return bidInLimit and (currPlayerHigherCount or currPlayerFaceHigher)
+
     def setNPlayers(self, nplayers):
         '''
         Summary:
@@ -139,8 +195,17 @@ class GameStats():
         
         for i in range(1,self.nPlayers + 1):
             playerX = Player(f'Player {i}')
-            hand = GameController.gameGenerateHand(self)
-            self.playerStats[i-1] = {'Name': playerX.Name,'Face': 0, 'Count': 0, 'DiceN': 5, 'Hand': hand, 'Status': 'Not set'}
+            hand = GameController.gameGenerateHand(self,6)
+            self.playerStats[i-1] = {
+                'Name': playerX.Name,
+                'Face': 0, 
+                'Count': 0, 
+                'DiceN': 5, 
+                'Hand': hand, 
+                'Status': 'Not set'}
+
+    def getCurrentPlayer(self):
+        return self.currentPlayer
 
     def getDiceStats(self) -> dict:
         '''
@@ -190,7 +255,6 @@ class GameStats():
         return diceN
 
     def getPlayerStats(self, player):
-        #TODO
         '''
         Summary:
         ---
@@ -203,7 +267,13 @@ class GameStats():
         Returns:
         All game moves of the player by game id
         '''
-        return self.playerStats[player]  
+        return self.playerStats[player]
+
+    def getPrevPlayer(self):
+        if self.currentPlayer == 0:
+            return self.nPlayers - 1
+        else:
+            return self.currentPlayer - 1
 
     def getGameState(self):
         '''
@@ -213,10 +283,118 @@ class GameStats():
         '''
         return self.playerStats
 
-    def setDiceDecr(self, player):
-        pass
+    def printGameState(self, gameStats: dict, currentPlayer: int):
+        '''
+        Summary:
+        ---
+        Prints the game state
+
+        Parameters:
+        ---
+        gameStats: the stats to be printed
+
+        currentPlayer: the current Player index - decides whose turn it is
+        '''
+
+        playerVals = gameStats.keys()
+        for cntr, playerVal in enumerate(playerVals):
+            if currentPlayer == cntr:
+                print(f'==>{playerVal}: {gameStats[playerVal]}')
+            else:
+                print(f'   {playerVal}: {gameStats[playerVal]}')
     
-    def updatePlayerBid(self, player, stats):
+    def setCurrentPlayer(player):
+        '''
+        Summary:
+        ---
+        Sets the current player
+        '''
+        pass
+
+    def setDiceDecr(self, player):
+        '''
+        Summery:
+        ---
+        Descreases if possible the number of dice available to a player
+
+        '''
+        
+        currentN = self.playerStats[player]['DiceN'] 
+
+        if currentN > 1:
+            self.playerStats[player]['DiceN'] -= 1
+        else:
+            self.playerStats[player]['DiceN'] = 0
+
+    def setGameMode(self, mode) -> None:
+        '''
+        Summary:
+        ---
+        Sets the game mode. Defaults to classic if invalid game mode is set
+
+        Parameters:
+        ---
+
+        mode: the mode to be set - 'classic' or 'wild'
+        '''
+
+        vars = ['classic', 'wild']
+        if mode in vars:
+            self.gameMode = mode
+        else:
+            misc.printSep()
+            print(f"Invalid game mode - {mode}! Mode can be only 'classic' or 'wild' Game mode set to default: 'classic'")
+
+    def setNextPlayer(self):
+        '''
+        Summary:
+        ---
+        Increments the current player so it is now next player's turn.
+        '''
+        if self.currentPlayer + 1 == self.nPlayers:
+            self.currentPlayer = 0
+        else: self.currentPlayer += 1
+
+    def setNextRound(self):
+        '''
+        Summary:
+        ---
+        Starts the next round of the game.
+        '''
+        players = self.getGameState()
+
+
+        for player in players:
+            if players[player]['DiceN'] == 0:
+                players[player]['Status'] = 'out'
+        
+        for player in players:
+            players[player]['Face'] = 0
+            players[player]['Count'] = 0
+            playerDiceN = players[player]['DiceN']
+            players[player]['Hand'] = GameController.gameGenerateHand(self,playerDiceN)
+            
+    def setNplayers(self, num: int) -> None:
+        '''
+        Summary:
+        ---
+        Sets the number of players for the game
+
+        Parameters:
+        ---
+
+        num: the number of players 
+        '''
+
+        if not isinstance(num, int) or num < 2:
+            misc.printSep()
+            print(f"Invalid number of players: {num}. The number of players must be an integer greater than 1. Number of players set to default: 2")
+            
+            self.nPlayers = 2
+        else:
+            self.nPlayers = num    
+
+    def setPlayerBid(self, player, stats):
         '''
         Summary:
         ---
@@ -238,6 +416,34 @@ class GameStats():
             self.playerStats[player]['Face'] = face
             self.playerStats[player]['Count'] = count
             self.playerStats[player]['Status'] = 'bid'
+
+    def setStartCurrentPlayer(self):
+        '''
+        Summary:
+        Sets a random player for game start
+        ---
+        '''
+
+        self.currentPlayer = random.randrange(start= 0,stop= self.nPlayers,step= 1)
+
+    def gameGenerateHand(self, nDice):
+        '''
+        Summary:
+        ---
+        Generates a hand based on dice values for specific die number
+
+        Parameters:
+        ---
+
+        nDice: the number of dice to generate number for
+
+        Returs:
+        ---
+        The dice hand in list format
+
+        '''
+        vals = [1,2,3,4,5,6]
+        return  [random.choice(vals) for i in range(nDice)] 
 
     def generateUUID(self):
       
@@ -347,23 +553,20 @@ class CommandInterface:
             
 
 
-class GameController:
+class GameMenu:
     
     '''
     Summary:
     ---
-    Runs the game - receives cmds from the console and controls the game objects
+    Class to operate the game menu
     '''
 
     def __init__(self) -> None:
         '''
         Summary:
         ---
-        Ini the GameController
+        Ini the game menu
         '''
-        self.nPlayers = 2
-        self.gameMode = 'classic' # classic (default) or wild
-        self.gameLog = []
 
         self.gameMenu_startScreen = ['New game', 'Exit']
         self.gameMenu_newGame = ['Start', 'Number of players', 'Game mode', 'Back']
@@ -409,70 +612,6 @@ class GameController:
         if not isinstance(selectionN, int) or nArr < 0 or nArr > lenMenu - 1:
             return False
         return True
-  
-    def isValidBid(self, bid: list, ndice: int, prevPlayerStats = None) -> bool:
-        '''
-        Summary:
-        ---
-        Checks for bid validy. The bid count cannot be higher than what's on the
-        table and the die must have a valid face. Previous player must have a higher face
-        or higher count of the same face.
-
-
-        Parameters:
-        ---
-
-        bid: a list containing the opening bid parameters
-
-        ndice: the number of dice in the game
-        
-        prevPlayerStats: a dictionary containing the stats of the previous player
-
-        Returns:
-        ---
-        True if valid. False if invalid
-        '''
-
-        if prevPlayerStats == None:
-            bidInLimit = bid[0] > 0 and bid[0] <= 6 and bid[1] > 0 and bid[1] < ndice 
-
-            if bidInLimit:
-                return True
-            else:
-                print('the dice must have a valid side and adequate face count')
-                return False
-
-        if bid == 'liar':
-            return True
-
-        currentPlayerFace = bid[0]
-        currentPlayerCount = bid[1]
-        prevPlayerFace = prevPlayerStats['Face']
-        prevPlayerCount = prevPlayerStats['Count']
-
-        bidInLimit = bid[0] > 0 and bid[0] <= 6 and bid[1] > 0 and bid[1] < ndice
-        
-        # higher face
-        currPlayerFaceHigher = bidInLimit and currentPlayerFace > prevPlayerFace
-        currPlayerGeFace = bidInLimit and currentPlayerFace >= prevPlayerFace
-        # equal faces but higher count 
-        currPlayerHigherCount =  bidInLimit and currPlayerGeFace and currentPlayerCount > prevPlayerCount
-
-        if not bidInLimit:
-            print('the dice must have a valid side and adequate face count')
-        
-        if not currPlayerGeFace:
-            print('current player incorrect face')
-            
-        if not currPlayerHigherCount:
-            print('current player incorrect count')
-
-
-
-        return bidInLimit and (currPlayerHigherCount or currPlayerFaceHigher)
-
-        
-        
 
     def printVals(self, vals: list) -> None:
         '''
@@ -483,101 +622,4 @@ class GameController:
 
         for order,val in enumerate(vals, start=1):
             print(f'{order}. {val}')
-    
-    def printGameState(self, gameStats: dict, currentPlayer: int):
-        '''
-        Summary:
-        ---
-        Prints the game state
-
-        Parameters:
-        ---
-        gameStats: the stats to be printed
-
-        currentPlayer: the current Player index - decides whose turn it is
-        '''
-
-        playerVals = gameStats.keys()
-        for cntr, playerVal in enumerate(playerVals):
-            if currentPlayer == cntr:
-                print(f'==>{playerVal}: {gameStats[playerVal]}')
-            else:
-                print(f'   {playerVal}: {gameStats[playerVal]}')
-
-    def getCurrentPlayer(self):
-        return self.currentPlayer
-
-    def getPrevPlayer(self):
-        if self.currentPlayer == 0:
-            return self.nPlayers - 1
-        else:
-            return self.currentPlayer - 1
-
-    def setNplayers(self, num: int) -> None:
-        '''
-        Summary:
-        ---
-        Sets the number of players for the game
-
-        Parameters:
-        ---
-
-        num: the number of players 
-        '''
-
-        if not isinstance(num, int) or num < 2:
-            misc.printSep()
-            print(f"Invalid number of players: {num}. The number of players must be an integer greater than 1. Number of players set to default: 2")
-            
-            self.nPlayers = 2
-        else:
-            self.nPlayers = num    
-
-    def setNextPlayer(self):
-        '''
-        Summary:
-        ---
-        Increments the current player so it is now next player's turn.
-        '''
-        if self.currentPlayer + 1 == self.nPlayers:
-            self.currentPlayer = 0
-        else: self.currentPlayer += 1
-        
-    def setCurrentPlayer(self: int):
-        '''
-        Summary:
-        Sets a random player for game start
-        ---
-        '''
-
-        self.currentPlayer = random.randrange(start= 0,stop= self.nPlayers,step= 1)
-
-    def setGameMode(self, mode) -> None:
-        '''
-        Summary:
-        ---
-        Sets the game mode. Defaults to classic if invalid game mode is set
-
-        Parameters:
-        ---
-
-        mode: the mode to be set - 'classic' or 'wild'
-        '''
-
-        vars = ['classic', 'wild']
-        if mode in vars:
-            self.gameMode = mode
-        else:
-            misc.printSep()
-            print(f"Invalid game mode - {mode}! Mode can be only 'classic' or 'wild' Game mode set to default: 'classic'")
-
-    def gameGenerateHand(self):
-        '''
-        Summary:
-        ---
-        Generates a hand based on dice values
-        '''
-        vals = [1,2,3,4,5,6]
-        return  [random.choice(vals) for i in range(len(vals))]
-
     
