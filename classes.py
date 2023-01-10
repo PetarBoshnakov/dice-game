@@ -1,3 +1,5 @@
+# game objects
+
 import sys
 import random
 import uuid
@@ -138,16 +140,54 @@ class GameStats():
         for i in range(1,self.nPlayers + 1):
             playerX = Player(f'Player {i}')
             hand = GameController.gameGenerateHand(self)
-            self.playerStats[playerX.Name] = {'ID': i-1,'Face': 0, 'Count': 0, 'DiceN': 5, 'Hand': hand, 'Status': 'Not set'}
+            self.playerStats[i-1] = {'Name': playerX.Name,'Face': 0, 'Count': 0, 'DiceN': 5, 'Hand': hand, 'Status': 'Not set'}
 
-    def getGameState(self):
+    def getDiceStats(self) -> dict:
         '''
+        Summary:
+        ---
+        Calculates the dice summary for the current game.
+
         Returns:
         ---
-        Dictionary with the current players information
+        A dictionary containing the values and their counts in the game        
         '''
-        return self.playerStats
+        players = self.nPlayers - 1
+        
+        dicevals = []
+        for player in range(players):
+            dicevals.append(self.getPlayerStats(player)['Hand'])
 
+                
+        diceGlob = {
+            1:0,
+            2:0,
+            3:0,
+            4:0,
+            5:0,
+            6:0
+        }
+
+        for val in dicevals:
+            for i in range(1,7):
+                diceGlob[i] += val.count(i)
+
+        return diceGlob
+
+
+    def getnDice(self):
+        '''
+        Summary:
+        ---
+        Returns the global number of dice
+        '''
+
+        diceN = 0
+        keys = self.playerStats.keys()
+        for key in keys:
+            diceN += self.playerStats[key]['DiceN']
+
+        return diceN
 
     def getPlayerStats(self, player):
         #TODO
@@ -165,22 +205,18 @@ class GameStats():
         '''
         return self.playerStats[player]  
 
-    def getnDice(self):
+    def getGameState(self):
         '''
-        Summary:
+        Returns:
         ---
-        Returns the global number of dice
+        Dictionary with the current players information
         '''
+        return self.playerStats
 
-        diceN = 0
-        keys = self.playerStats.keys()
-        for key in keys:
-            diceN += self.playerStats[key]['DiceN']
-
-        return diceN
-
-    def updatePlayerStats(self, player, stats):
-        #TODO
+    def setDiceDecr(self, player):
+        pass
+    
+    def updatePlayerBid(self, player, stats):
         '''
         Summary:
         ---
@@ -194,11 +230,14 @@ class GameStats():
         bid: holds the bid value in a list 
 
         '''
-        face = bid[0]
-        count = bid[1]
-        if self.isValidStatsFormat(bid):
+        if stats == 'liar':
+            self.playerStats[player]['Status'] = 'liar'
+        else:    
+            face = stats[0]
+            count = stats[1]
             self.playerStats[player]['Face'] = face
             self.playerStats[player]['Count'] = count
+            self.playerStats[player]['Status'] = 'bid'
 
     def generateUUID(self):
       
@@ -303,7 +342,7 @@ class CommandInterface:
             except:
                 misc.printSep()
                 print(f"Wrong bid format: {cmd}. Format must be 'int int' or 'liar' !")
-                return [-1,-1]
+                return [0,0]
         return valsInt
             
 
@@ -370,31 +409,69 @@ class GameController:
         if not isinstance(selectionN, int) or nArr < 0 or nArr > lenMenu - 1:
             return False
         return True
-    
-    def isValidBid(self, bid: list, ndice: int) -> bool:
+  
+    def isValidBid(self, bid: list, ndice: int, prevPlayerStats = None) -> bool:
         '''
         Summary:
         ---
-        Checks if the bid is valid
+        Checks for bid validy. The bid count cannot be higher than what's on the
+        table and the die must have a valid face. Previous player must have a higher face
+        or higher count of the same face.
 
 
         Parameters:
         ---
 
-        bid: The bid cannot consists of more faces than the available dice number
+        bid: a list containing the opening bid parameters
+
+        ndice: the number of dice in the game
         
+        prevPlayerStats: a dictionary containing the stats of the previous player
+
         Returns:
         ---
         True if valid. False if invalid
         '''
-        
+
+        if prevPlayerStats == None:
+            bidInLimit = bid[0] > 0 and bid[0] <= 6 and bid[1] > 0 and bid[1] < ndice 
+
+            if bidInLimit:
+                return True
+            else:
+                print('the dice must have a valid side and adequate face count')
+                return False
+
         if bid == 'liar':
-            return True 
-        elif (bid[0] < ndice and bid[0] > 0 and bid[0] < 6):
             return True
 
-        else: 
-            return False
+        currentPlayerFace = bid[0]
+        currentPlayerCount = bid[1]
+        prevPlayerFace = prevPlayerStats['Face']
+        prevPlayerCount = prevPlayerStats['Count']
+
+        bidInLimit = bid[0] > 0 and bid[0] <= 6 and bid[1] > 0 and bid[1] < ndice
+        
+        # higher face
+        currPlayerFaceHigher = bidInLimit and currentPlayerFace > prevPlayerFace
+        currPlayerGeFace = bidInLimit and currentPlayerFace >= prevPlayerFace
+        # equal faces but higher count 
+        currPlayerHigherCount =  bidInLimit and currPlayerGeFace and currentPlayerCount > prevPlayerCount
+
+        if not bidInLimit:
+            print('the dice must have a valid side and adequate face count')
+        
+        if not currPlayerGeFace:
+            print('current player incorrect face')
+            
+        if not currPlayerHigherCount:
+            print('current player incorrect count')
+
+
+
+        return bidInLimit and (currPlayerHigherCount or currPlayerFaceHigher)
+
+        
         
 
     def printVals(self, vals: list) -> None:
@@ -426,6 +503,15 @@ class GameController:
                 print(f'==>{playerVal}: {gameStats[playerVal]}')
             else:
                 print(f'   {playerVal}: {gameStats[playerVal]}')
+
+    def getCurrentPlayer(self):
+        return self.currentPlayer
+
+    def getPrevPlayer(self):
+        if self.currentPlayer == 0:
+            return self.nPlayers - 1
+        else:
+            return self.currentPlayer - 1
 
     def setNplayers(self, num: int) -> None:
         '''
