@@ -99,7 +99,9 @@ class GameController():
         self.gameLog = []
         self.nPlayers = self.setNPlayers(nplayers)
         self.nDice = nplayers * 5
+        self.currentPlayer = 0
         self.playerStats = {}
+        self.playersLeft = self.nPlayers
 
         # initializes the players DB
         self.ini_players()
@@ -128,11 +130,10 @@ class GameController():
         '''
 
         if prevPlayerStats == None:
-            bidInLimit = bid[0] > 0 and bid[0] <= 6 and bid[1] > 0 and bid[1] < ndice 
-
-            if bidInLimit:
+            try:
+                bidInLimit = bid[0] > 0 and bid[0] <= 6 and bid[1] > 0 and bid[1] < ndice 
                 return True
-            else:
+            except:
                 print('the dice must have a valid side and adequate face count')
                 return False
 
@@ -253,6 +254,15 @@ class GameController():
             diceN += self.playerStats[key]['DiceN']
 
         return diceN
+    
+    def getPlayersLeft(self) -> int:
+        '''
+        Summary:
+        ---
+        Returns the players left
+        '''
+
+        return self.playersLeft
 
     def getPlayerStats(self, player):
         '''
@@ -269,11 +279,22 @@ class GameController():
         '''
         return self.playerStats[player]
 
-    def getPrevPlayer(self):
-        if self.currentPlayer == 0:
-            return self.nPlayers - 1
+    def getPrevPlayer(self, currPlayer):
+        '''
+        Summery:
+        ---
+        Returns the index of the previous player
+        '''
+
+        if currPlayer == 0:
+            prevPlayer = self.nPlayers - 1
         else:
-            return self.currentPlayer - 1
+            prevPlayer =  currPlayer - 1
+        
+        if self.playerStats[prevPlayer]['Status'] == 'out':
+            prevPlayer = self.getPrevPlayer(prevPlayer)
+        
+        return prevPlayer
 
     def getGameState(self):
         '''
@@ -372,6 +393,7 @@ class GameController():
         for player in players:
             if players[player]['DiceN'] == 0:
                 players[player]['Status'] = 'out'
+                self.setPlayersLeftDecr()
         
         for player in players:
             players[player]['Face'] = 0
@@ -421,6 +443,20 @@ class GameController():
             self.playerStats[player]['Face'] = face
             self.playerStats[player]['Count'] = count
             self.playerStats[player]['Status'] = 'bid'
+    
+    def setPlayersLeftDecr(self):
+        '''
+        Summary:
+        ---
+        Decrements the current players in the game
+        '''
+        tempVal =  self.playersLeft - 1
+
+        if tempVal == 0:
+            print('players cannot be less than 1')
+            self.playersLeft = 1
+        else:
+            self.playersLeft -= 1
 
     def setStartCurrentPlayer(self):
         '''

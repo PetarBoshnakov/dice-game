@@ -101,29 +101,35 @@ def playGame(game: classes.GameController):
 
         # print game state
         game.printGameState()
+
+        # check if we have a winner
+        if game.getPlayersLeft() == 1:
+            print(f"Playr {currPlayerStats['Name']} is the winner!")
+            break
         
         # get current player input
         cmd = cmdI.getCmd('Your bid: ', 'bid')
         playerBid = cmd
+
+        # check if the prev player is a liar and adjust dice count accordingly
         if cmd == 'liar' and turnCounter > 0:
-            prevPlayer = game.getPrevPlayer()
             currPlayer = game.getCurrentPlayer()
+            prevPlayer = game.getPrevPlayer(currPlayer)
             diceCounts = game.getDiceStats()
-            prevPlayerStats = game.getPlayerStats(prevPlayer)
             currPlayerStats = game.getPlayerStats(currPlayer)
+            prevPlayerStats = game.getPlayerStats(prevPlayer)
             prevPlayerFace = game.getPlayerStats(prevPlayer)['Face']
             prevPlayerCount = game.getPlayerStats(prevPlayer)['Count']
 
             if diceCounts[prevPlayerFace] >= prevPlayerCount:
-                print(f"{currPlayer['Name']} loses 1 die")
+                print(f"{currPlayerStats['Name']} loses 1 die")
                 game.setDiceDecr(currPlayer)
                 game.setNextRound()
                 turnCounter = 0
                 continue
 
             else:
-               # diceCounts[prevPlayerFace] == prevPlayerCount:
-                print(f"{prevPlayer['Name']} loses 1 die")
+                print(f"{prevPlayerStats['Name']} loses 1 die")
                 game.setDiceDecr(prevPlayer)
                 game.setNextRound()
                 turnCounter = 0
@@ -141,14 +147,13 @@ def playGame(game: classes.GameController):
             continue
         
         # checks the input on after 1st round
-        prevPlayer = game.getPrevPlayer()
+        currPlayer = game.getCurrentPlayer()
+        prevPlayer = game.getPrevPlayer(currPlayer)
+        currPlayerStats = game.getPlayerStats(currPlayer)
         prevPlayerStats = game.getPlayerStats(prevPlayer)
         if not game.isValidBid(cmd, game.getnDice(), prevPlayerStats):
             continue
         
-        # updates player stats if the input is correct and liar has not been called
-
-
 
         # continue to next player
         game.setPlayerBid(game.getCurrentPlayer(),cmd)
