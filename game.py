@@ -104,6 +104,7 @@ def playGame(game: classes.GameController):
 
         # check if we have a winner
         if game.getPlayersLeft() == 1:
+            misc.printSep()
             print(f"Playr {currPlayerStats['Name']} is the winner!")
             break
         
@@ -120,6 +121,11 @@ def playGame(game: classes.GameController):
             prevPlayerStats = game.getPlayerStats(prevPlayer)
             prevPlayerFace = game.getPlayerStats(prevPlayer)['Face']
             prevPlayerCount = game.getPlayerStats(prevPlayer)['Count']
+            
+            # wild mode setting
+            if game.getGameMode() == 'wild':
+                prevPlayerCount += diceCounts[1]
+
 
             if diceCounts[prevPlayerFace] >= prevPlayerCount:
                 print(f"{currPlayerStats['Name']} loses 1 die")

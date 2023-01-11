@@ -2,7 +2,6 @@
 
 import sys
 import random
-import uuid
 import misc
 
 class Player:
@@ -131,7 +130,16 @@ class GameController():
 
         if prevPlayerStats == None:
             try:
-                bidInLimit = bid[0] > 0 and bid[0] <= 6 and bid[1] > 0 and bid[1] < ndice 
+                
+
+                # i left this code as this because it is fun to find a python bug IndexError
+                # bidInLimit = bid[0] > 0 and bid[0] <= 6 and bid[1] > 0 and bid[1] < ndice 
+
+                # this is the working code
+                face = bid[0]
+                count = bid[1]
+                bidInLimit = face > 0 and face <= 6 and count > 0 and count < ndice 
+
                 return True
             except:
                 print('the dice must have a valid side and adequate face count')
@@ -140,8 +148,11 @@ class GameController():
         if bid == 'liar':
             return True
 
-        currentPlayerFace = bid[0]
-        currentPlayerCount = bid[1]
+        try:
+            currentPlayerFace = bid[0]
+            currentPlayerCount = bid[1]
+        except:
+            return False
         prevPlayerFace = prevPlayerStats['Face']
         prevPlayerCount = prevPlayerStats['Count']
 
@@ -166,7 +177,7 @@ class GameController():
 
         return bidInLimit and (currPlayerHigherCount or currPlayerFaceHigher)
 
-    def setNPlayers(self, nplayers):
+    def setNPlayers(self, nplayers) -> None:
         '''
         Summary:
         ---
@@ -187,7 +198,7 @@ class GameController():
             print(f'{nplayers} is not valid input. The number of players must be an integer. The player count is set to the default: 2')
             return 2
 
-    def ini_players(self):    
+    def ini_players(self) -> int:    
         '''
         Summary:
         ---
@@ -196,12 +207,13 @@ class GameController():
         
         for i in range(1,self.nPlayers + 1):
             playerX = Player(f'Player {i}')
-            hand = self.gameGenerateHand(6)
+            dicenCount = 5
+            hand = self.gameGenerateHand(dicenCount)
             self.playerStats[i-1] = {
                 'Name': playerX.Name,
                 'Face': 0, 
                 'Count': 0, 
-                'DiceN': 5, 
+                'DiceN': dicenCount, 
                 'Hand': hand, 
                 'Status': 'Not set'}
 
@@ -241,7 +253,7 @@ class GameController():
         return diceGlob
 
 
-    def getnDice(self):
+    def getnDice(self) -> int:
         '''
         Summary:
         ---
@@ -264,7 +276,7 @@ class GameController():
 
         return self.playersLeft
 
-    def getPlayerStats(self, player):
+    def getPlayerStats(self, player: int) -> dict:
         '''
         Summary:
         ---
@@ -272,14 +284,14 @@ class GameController():
 
         Parameters:
         ---
-        player: 
+        player: int pointing at the player in the player dict
 
         Returns:
-        All game moves of the player by game id
+        Dict of the player current stats
         '''
         return self.playerStats[player]
 
-    def getPrevPlayer(self, currPlayer):
+    def getPrevPlayer(self, currPlayer) -> int:
         '''
         Summery:
         ---
@@ -296,7 +308,15 @@ class GameController():
         
         return prevPlayer
 
-    def getGameState(self):
+    def getGameMode(self) -> str:
+        '''
+        Summary:
+        ---
+        Returns the current game mode
+        '''
+        return self.gameMode
+
+    def getGameState(self) -> dict:
         '''
         Returns:
         ---
@@ -304,7 +324,7 @@ class GameController():
         '''
         return self.playerStats
 
-    def printGameState(self):
+    def printGameState(self) -> None:
         '''
         Summary:
         ---
@@ -323,16 +343,8 @@ class GameController():
                 print(f'==>{playerVal}: {self.playerStats[playerVal]}')
             else:
                 print(f'   {playerVal}: {self.playerStats[playerVal]}')
-    
-    def setCurrentPlayer(player):
-        '''
-        Summary:
-        ---
-        Sets the current player
-        '''
-        pass
 
-    def setDiceDecr(self, player):
+    def setDiceDecr(self, player) -> None:
         '''
         Summery:
         ---
@@ -366,7 +378,7 @@ class GameController():
             misc.printSep()
             print(f"Invalid game mode - {mode}! Mode can be only 'classic' or 'wild' Game mode set to default: 'classic'")
 
-    def setNextPlayer(self):
+    def setNextPlayer(self) -> None:
         '''
         Summary:
         ---
@@ -381,7 +393,7 @@ class GameController():
         if self.playerStats[self.currentPlayer]['Status'] == 'out':
             self.setNextPlayer()
 
-    def setNextRound(self):
+    def setNextRound(self) -> None:
         '''
         Summary:
         ---
@@ -391,7 +403,7 @@ class GameController():
 
 
         for player in players:
-            if players[player]['DiceN'] == 0:
+            if players[player]['DiceN'] == 0 and players[player]['Status'] != 'out':
                 players[player]['Status'] = 'out'
                 self.setPlayersLeftDecr()
         
@@ -421,7 +433,7 @@ class GameController():
         else:
             self.nPlayers = num    
 
-    def setPlayerBid(self, player, stats):
+    def setPlayerBid(self, player, stats) -> None:
         '''
         Summary:
         ---
@@ -444,7 +456,7 @@ class GameController():
             self.playerStats[player]['Count'] = count
             self.playerStats[player]['Status'] = 'bid'
     
-    def setPlayersLeftDecr(self):
+    def setPlayersLeftDecr(self) -> None:
         '''
         Summary:
         ---
@@ -458,16 +470,16 @@ class GameController():
         else:
             self.playersLeft -= 1
 
-    def setStartCurrentPlayer(self):
+    def setStartCurrentPlayer(self) -> None:
         '''
         Summary:
-        Sets a random player for game start
         ---
+        Sets a random player for game start
         '''
 
         self.currentPlayer = random.randrange(start= 0,stop= self.nPlayers,step= 1)
 
-    def gameGenerateHand(self, nDice):
+    def gameGenerateHand(self, nDice) -> list:
         '''
         Summary:
         ---
@@ -485,10 +497,6 @@ class GameController():
         '''
         vals = [1,2,3,4,5,6]
         return  [random.choice(vals) for i in range(nDice)] 
-
-    def generateUUID(self):
-      
-        return uuid.uuid4()
 
 
 class CommandInterface:
