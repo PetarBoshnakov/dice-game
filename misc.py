@@ -2,7 +2,7 @@
 
 import os
 
-def printSep():
+def print_sep():
     #os.system('cls')
     print('\n')
     print('#'*15)

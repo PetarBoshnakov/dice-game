@@ -5,7 +5,7 @@ import sys
 import misc
 
 
-def pushMenu(stak: list, menu: list):
+def push_menu(stak: list, menu: list):
     '''
     Summary:
     ---
@@ -22,65 +22,65 @@ def pushMenu(stak: list, menu: list):
     if len(stak) == 0 or stak[-1] != menu:
         stak.append(menu)
 
-def gameMenu():
+def game_menu():
     '''
     Summary:
     ---
     Iterates the game menus and starts the game
     '''
-    gameMenu = classes.GameMenu()
-    cmdI = classes.CommandInterface()
-    gameN = classes.GameController(2)
+    game_menu = classes.GameMenu()
+    cmd_i = classes.CommandInterface()
+    game_new = classes.GameController(2)
 
-    currMenu = gameMenu.gameMenu_startScreen
-    pathStack = []
-    pushMenu(pathStack,currMenu)
+    curr_menu = game_menu.game_menu_start_screen
+    path_stack = []
+    push_menu(path_stack,curr_menu)
     while True:
         
-        misc.printSep()
-        currMenu = pathStack[-1]
-        gameMenu.printVals(currMenu)
+        misc.print_sep()
+        curr_menu = path_stack[-1]
+        game_menu.print_vals(curr_menu)
 
         prompt = 'Please select option: '
-        cmd = cmdI.getCmd(prompt,'num')
+        cmd = cmd_i.get_cmd(prompt,'num')
         
         while cmd == None:
-            cmd = cmdI.getCmd(prompt,'num')
-        selection = gameMenu.selectFromMenu(currMenu, cmd)
+            cmd = cmd_i.get_cmd(prompt,'num')
+        selection = game_menu.select_from_menu(curr_menu, cmd)
         
 
         if selection == 'New game':
-            pushMenu(pathStack, gameMenu.gameMenu_newGame)
-            gameMenu.printVals(currMenu)
+            push_menu(path_stack, game_menu.game_menu_new_game)
+            game_menu.print_vals(curr_menu)
 
         elif selection == 'Start':
             print('start game')
-            playGame(gameN) 
+            play_game(game_new) 
 
         elif selection == 'Number of players':
             prompt = 'Please enter the number of players (default is 2): '
-            cmd = cmdI.getCmd(prompt, 'num')
-            gameN.setNplayers(cmd)
-            print(f'Number of players: {gameN.nPlayers}')
+            cmd = cmd_i.get_cmd(prompt, 'num')
+            game_new.set_nplayers_game(cmd)
+            print(f'Number of players: {game_new.nplayers}')
 
         elif selection == 'Game mode':
             prompt = "Please enter the game mode - it can only be 'classic' or 'wild': "
             cmd = input(prompt)
-            gameN.setGameMode(cmd)
-            print(f'Game mode: {gameN.gameMode}')
+            game_new.set_game_mode(cmd)
+            print(f'Game mode: {game_new.game_mode}')
 
         elif selection == 'Exit':
             print('Sad to see you go ;(')
             sys.exit()
 
         elif selection == 'Back':
-            pathStack.pop()
+            path_stack.pop()
         
         else:
             print('Please select a valid menu item by inputing a menu number. For example 1 unless advised otherwise.')
         
 
-def playGame(game: classes.GameController):
+def play_game(game: classes.GameController):
     '''
     Summary:
     ---
@@ -88,88 +88,88 @@ def playGame(game: classes.GameController):
     '''
 
     cmdI = classes.CommandInterface()
-    game = classes.GameController(game.nPlayers)
-    game.setStartCurrentPlayer()
+    game = classes.GameController(game.nplayers)
+    game.set_start_current_player()
 
     print("Bid in the form of 'int int' or 'liar'. Press 'q' to quit the current game.")
     
     # game loop
     while True:
 
-        misc.printSep()
+        misc.print_sep()
 
         # print game state
-        game.printGameState()
+        game.print_game_state()
 
         # check if we have a winner
-        if game.getPlayersLeft() == 1:
-            misc.printSep()
-            print(f"Playr {currPlayerStats['Name']} is the winner!")
+        if game.get_players_left() == 1:
+            misc.print_sep()
+            print(f"Playr {curr_player_stats['Name']} is the winner!")
             break
         
         # get current player input
-        cmd = cmdI.getCmd('Your bid: ', 'bid')
+        cmd = cmdI.get_cmd('Your bid: ', 'bid')
         playerBid = cmd
 
         # check if the prev player is a liar and adjust dice count accordingly
-        turnCounter = game.getTurnCounter()
+        turn_counter = game.get_turn_counter()
         
-        if cmd == 'liar' and turnCounter > 0:
-            currPlayer = game.getCurrentPlayer()
-            prevPlayer = game.getPrevPlayer(currPlayer)
-            diceCounts = game.getDiceStats()
-            currPlayerStats = game.getPlayerStats(currPlayer)
-            prevPlayerStats = game.getPlayerStats(prevPlayer)
-            prevPlayerFace = game.getPlayerStats(prevPlayer)['Face']
-            prevPlayerCount = game.getPlayerStats(prevPlayer)['Count']
+        if cmd == 'liar' and turn_counter > 0:
+            curr_player = game.get_current_player()
+            prev_player = game.get_prev_player(curr_player)
+            dice_counts = game.get_dice_stats()
+            curr_player_stats = game.get_player_stats(curr_player)
+            prev_player_stats = game.get_player_stats(prev_player)
+            prev_player_face = game.get_player_stats(prev_player)['Face']
+            prev_player_count = game.get_player_stats(prev_player)['Count']
             
             # wild mode setting
-            gameMode = game.getGameMode()
-            if gameMode == 'wild' and prevPlayerFace > 1:
-                prevPlayerCount += diceCounts[1]
+            game_mode = game.get_game_mode()
+            if game_mode == 'wild' and prev_player_face > 1:
+                prev_player_count += dice_counts[1]
 
             # checks if the prev player has correct face count
             # if they do, the curr players loses a die
 
             # sets the turn counter to zero since we are dealing new hands
-            if diceCounts[prevPlayerFace] >= prevPlayerCount:
-                print(f"{currPlayerStats['Name']} loses 1 die")
-                game.setDiceDecr(currPlayer)
-                game.setNextRound()
-                game.setTurnCounterZero()
+            if dice_counts[prev_player_face] >= prev_player_count:
+                print(f"{curr_player_stats['Name']} loses 1 die")
+                game.set_dice_decr(curr_player)
+                game.set_next_round()
+                game.set_turn_counter_zero()
                 continue
             
             else:
-                print(f"{prevPlayerStats['Name']} loses 1 die")
-                game.setDiceDecr(prevPlayer)
-                game.setNextRound()
-                game.setTurnCounterZero()
+                print(f"{prev_player_stats['Name']} loses 1 die")
+                game.set_dice_decr(prev_player)
+                game.set_next_round()
+                game.set_turn_counter_zero()
                 continue
         
         # check for input on first round
         # if invalid input - again
-        validBid = game.isValidBid(cmd, game.getnDice())
-        if turnCounter == 0 and validBid:
-            game.setPlayerBid(game.currentPlayer,playerBid)
-            game.setNextPlayer()
-            game.setTurnCounterIncr()
+        valid_bid = game.is_valid_bid(cmd, game.get_n_dice())
+        if turn_counter == 0 and valid_bid:
+            game.set_player_bid(game.current_player,playerBid)
+            game.set_next_player()
+            game.set_turn_counter_incr()
             continue
-        elif turnCounter == 0 and not validBid:
+        elif turn_counter == 0 and not valid_bid:
             continue
         
         # checks the input after first round
-        currPlayer = game.getCurrentPlayer()
-        prevPlayer = game.getPrevPlayer(currPlayer)
-        currPlayerStats = game.getPlayerStats(currPlayer)
-        prevPlayerStats = game.getPlayerStats(prevPlayer)
-        if not game.isValidBid(cmd, game.getnDice(), prevPlayerStats):
+        curr_player = game.get_current_player()
+        prev_player = game.get_prev_player(curr_player)
+        curr_player_stats = game.get_player_stats(curr_player)
+        prev_player_stats = game.get_player_stats(prev_player)
+        if not game.is_valid_bid(cmd, game.get_n_dice(), prev_player_stats):
             continue
         
 
         # continue to next player
-        game.setPlayerBid(game.getCurrentPlayer(),cmd)
-        game.setNextPlayer()
-        game.setTurnCounterIncr()
+        game.set_player_bid(game.get_current_player(),cmd)
+        game.set_next_player()
+        game.set_turn_counter_incr()
         
 
 

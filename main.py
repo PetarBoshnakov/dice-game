@@ -1,7 +1,7 @@
 import game
 
 def main():
-    game.gameMenu()
+    game.game_menu()
 
 if __name__ == '__main__':
     main()
