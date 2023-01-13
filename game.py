@@ -93,7 +93,6 @@ def playGame(game: classes.GameController):
 
     print("Bid in the form of 'int int' or 'liar'. Press 'q' to quit the current game.")
     
-    turnCounter = 0
     # game loop
     while True:
 
@@ -113,6 +112,8 @@ def playGame(game: classes.GameController):
         playerBid = cmd
 
         # check if the prev player is a liar and adjust dice count accordingly
+        turnCounter = game.getTurnCounter()
+        
         if cmd == 'liar' and turnCounter > 0:
             currPlayer = game.getCurrentPlayer()
             prevPlayer = game.getPrevPlayer(currPlayer)
@@ -123,22 +124,26 @@ def playGame(game: classes.GameController):
             prevPlayerCount = game.getPlayerStats(prevPlayer)['Count']
             
             # wild mode setting
-            if game.getGameMode() == 'wild':
+            gameMode = game.getGameMode()
+            if gameMode == 'wild' and prevPlayerFace > 1:
                 prevPlayerCount += diceCounts[1]
 
+            # checks if the prev player has correct face count
+            # if they do, the curr players loses a die
 
+            # sets the turn counter to zero since we are dealing new hands
             if diceCounts[prevPlayerFace] >= prevPlayerCount:
                 print(f"{currPlayerStats['Name']} loses 1 die")
                 game.setDiceDecr(currPlayer)
                 game.setNextRound()
-                turnCounter = 0
+                game.setTurnCounterZero()
                 continue
-
+            
             else:
                 print(f"{prevPlayerStats['Name']} loses 1 die")
                 game.setDiceDecr(prevPlayer)
                 game.setNextRound()
-                turnCounter = 0
+                game.setTurnCounterZero()
                 continue
         
         # check for input on first round
@@ -147,12 +152,12 @@ def playGame(game: classes.GameController):
         if turnCounter == 0 and validBid:
             game.setPlayerBid(game.currentPlayer,playerBid)
             game.setNextPlayer()
-            turnCounter += 1
+            game.setTurnCounterIncr()
             continue
         elif turnCounter == 0 and not validBid:
             continue
         
-        # checks the input on after 1st round
+        # checks the input after first round
         currPlayer = game.getCurrentPlayer()
         prevPlayer = game.getPrevPlayer(currPlayer)
         currPlayerStats = game.getPlayerStats(currPlayer)
@@ -164,7 +169,7 @@ def playGame(game: classes.GameController):
         # continue to next player
         game.setPlayerBid(game.getCurrentPlayer(),cmd)
         game.setNextPlayer()
-        turnCounter += 1
+        game.setTurnCounterIncr()
         
 
 

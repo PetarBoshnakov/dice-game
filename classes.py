@@ -3,64 +3,10 @@
 import sys
 import random
 import misc
+import math
+import stats
 
-class Player:
-    '''
-    Defines the player class
-    '''
-
-    def __init__(self, name: str):
-        '''
-        Summary:
-        ---
-        Ini a player with a name
-        
-        Parameters:
-        ---
-        name: player name
-        '''
-        self.Name = name
-
-class Bot(Player):
-    '''
-    Summary:
-    ---
-    Defines the actions that a bot can take
-    '''
-    def isWildMode(self):
-        if GameController.gameMode == 'wild':
-            return True
-        return False
-    
-
-    def bid(self, bid):
-        #TODO
-        '''
-        Summary:
-        ---
-        Submits a bid to the Game Stats
-
-        Parameters:
-        ---
-        bid: 
-        '''
-        #TODO
-        pass
-        
-    def liar(self):
-        '''
-        Summary:
-        ---
-        showdown. winner is decided between current and previous player. loser 
-        loses one die
-        '''
-        #TODO
-        pass
-
-    def generateBid(self):
-        #TODO
-        pass
-    
+  
 class GameController():
     '''
     Summary:
@@ -101,6 +47,7 @@ class GameController():
         self.currentPlayer = 0
         self.playerStats = {}
         self.playersLeft = self.nPlayers
+        self.turnCounter = 0
 
         # initializes the players DB
         self.ini_players()
@@ -126,6 +73,7 @@ class GameController():
         Returns:
         ---
         True if valid. False if invalid
+
         '''
 
         if prevPlayerStats == None:
@@ -177,7 +125,7 @@ class GameController():
 
         return bidInLimit and (currPlayerHigherCount or currPlayerFaceHigher)
 
-    def setNPlayers(self, nplayers) -> None:
+    def setNPlayers(self, nplayers) -> int:
         '''
         Summary:
         ---
@@ -190,7 +138,9 @@ class GameController():
         Returns:
         ---
         nplayers or 2 if the conditions are not met
+
         '''
+
         if isinstance(nplayers,int):
             return nplayers    
         else:
@@ -198,11 +148,12 @@ class GameController():
             print(f'{nplayers} is not valid input. The number of players must be an integer. The player count is set to the default: 2')
             return 2
 
-    def ini_players(self) -> int:    
+    def ini_players(self) -> None:    
         '''
         Summary:
         ---
         Ini the number of players for the game
+
         '''
         
         for i in range(1,self.nPlayers + 1):
@@ -228,8 +179,10 @@ class GameController():
 
         Returns:
         ---
-        A dictionary containing the values and their counts in the game        
+        A dictionary containing the values and their counts in the game       
+
         '''
+
         players = self.nPlayers
         
         dicevals = []
@@ -257,7 +210,8 @@ class GameController():
         '''
         Summary:
         ---
-        Returns the global number of dice
+        Returns the current global number of dice
+
         '''
 
         diceN = 0
@@ -272,7 +226,9 @@ class GameController():
         Summary:
         ---
         Returns the players left
+
         '''
+
 
         return self.playersLeft
 
@@ -288,7 +244,9 @@ class GameController():
 
         Returns:
         Dict of the player current stats
+
         '''
+
         return self.playerStats[player]
 
     def getPrevPlayer(self, currPlayer) -> int:
@@ -296,6 +254,7 @@ class GameController():
         Summery:
         ---
         Returns the index of the previous player
+
         '''
 
         if currPlayer == 0:
@@ -313,7 +272,9 @@ class GameController():
         Summary:
         ---
         Returns the current game mode
+
         '''
+
         return self.gameMode
 
     def getGameState(self) -> dict:
@@ -321,8 +282,20 @@ class GameController():
         Returns:
         ---
         Dictionary with the current players information
+
         '''
+
         return self.playerStats
+    
+    def getTurnCounter(self) -> int:
+        '''
+        Summary:
+        ---
+        Returns the turncounter
+
+        '''
+
+        return self.turnCounter
 
     def printGameState(self) -> None:
         '''
@@ -335,6 +308,7 @@ class GameController():
         gameStats: the stats to be printed
 
         currentPlayer: the current Player index - decides whose turn it is
+
         '''
 
         playerVals = self.playerStats.keys()
@@ -369,6 +343,7 @@ class GameController():
         ---
 
         mode: the mode to be set - 'classic' or 'wild'
+
         '''
 
         vars = ['classic', 'wild']
@@ -383,6 +358,7 @@ class GameController():
         Summary:
         ---
         Increments the current player so it is now next player's turn.
+
         '''
 
         if self.currentPlayer + 1 == self.nPlayers:
@@ -397,8 +373,11 @@ class GameController():
         '''
         Summary:
         ---
-        Starts the next round of the game.
+        Adjusts the player statuses and zeroes their bets. Generates new hands forthe players
+        taking into account their available dice
+
         '''
+
         players = self.getGameState()
 
 
@@ -423,6 +402,7 @@ class GameController():
         ---
 
         num: the number of players 
+
         '''
 
         if not isinstance(num, int) or num < 2:
@@ -447,6 +427,7 @@ class GameController():
         bid: holds the bid value in a list 
 
         '''
+
         if stats == 'liar':
             self.playerStats[player]['Status'] = 'liar'
         else:    
@@ -461,7 +442,9 @@ class GameController():
         Summary:
         ---
         Decrements the current players in the game
+
         '''
+
         tempVal =  self.playersLeft - 1
 
         if tempVal == 0:
@@ -475,9 +458,30 @@ class GameController():
         Summary:
         ---
         Sets a random player for game start
+
         '''
 
         self.currentPlayer = random.randrange(start= 0,stop= self.nPlayers,step= 1)
+
+    def setTurnCounterZero(self) -> None:
+        '''
+        Summary:
+        ---
+        Zeroes the turncounter
+        
+        '''
+
+        self.turnCounter = 0
+
+    def setTurnCounterIncr(self) -> None:
+        '''
+        Summary:
+        ---
+        Increments the turn counter by 1.
+        
+        '''
+
+        self.turnCounter += 1
 
     def gameGenerateHand(self, nDice) -> list:
         '''
@@ -495,6 +499,7 @@ class GameController():
         The dice hand in list format
 
         '''
+
         vals = [1,2,3,4,5,6]
         return  [random.choice(vals) for i in range(nDice)] 
 
@@ -556,6 +561,7 @@ class CommandInterface:
         ---
         returns the number for the command after checking
         format was given
+        
         '''
 
         num = cmd.split(' ')[0]
@@ -640,7 +646,7 @@ class GameMenu:
             retVal = selectionN - 1
             return menu[retVal]
         else:
-            return None
+            return
     
     def checkValidSelection(self, menu: list, selectionN: int) -> bool:
         '''
@@ -671,4 +677,125 @@ class GameMenu:
 
         for order,val in enumerate(vals, start=1):
             print(f'{order}. {val}')
-    
+
+class Player:
+    '''
+    Defines the player class
+    '''
+
+    def __init__(self, name: str):
+        '''
+        Summary:
+        ---
+        Ini a player with a name
+        
+        Parameters:
+        ---
+        name: player name
+        '''
+        self.Name = name
+
+class Bot(Player):
+    '''
+    Summary:
+    ---
+    Defines the actions that a bot can take
+    '''
+
+    def __init__(self, name: str):
+        super().__init__(name)
+
+        self.truthScore = {} # holds a arbitratry value deciding how hones a player is
+
+    def isWildMode(self, game: GameController):
+        if game.getGameMode() == 'wild':
+            return True
+        return False    
+
+    def bid(self, game: GameController):
+        '''
+        Summary:
+        ---
+        Returns a bid
+
+        Parameters:
+        ---
+        game: a game controller class instance to act upon
+
+        '''
+        
+        # game globals
+        wildMode = self.isWildMode(game)
+        diceInGame = game.getnDice()
+        
+
+        # player state
+        currPlayer = game.getCurrentPlayer()
+        prevPlayer = game.getPrevPlayer(currPlayer)
+        prevPlayer = game.getPlayerStats(prevPlayer)
+        prevPlayerFace = prevPlayer['Face']
+        prevPlayerCount = prevPlayer['Count']
+
+        e = math.floor((1/6) * diceInGame)
+        
+        if wildMode and prevPlayerFace > 1:
+            prevPlayerCount
+            e *= 2
+
+        if prevPlayerCount > e:
+            self.liar()
+        
+        probAfterRaise = stats.mass_prob(diceInGame,prevPlayerCount + 1)
+
+        # percentage sum must be 100
+        raiseNormPer = probAfterRaise
+
+        choiceVal = random.randint(0,100)
+        callRaise = choiceVal <= raiseNormPer
+        callRiskRaise = choiceVal <= (0.3 * raiseNormPer)
+
+        bidFace = 0
+        bidCount = 0
+        # bid logic here
+        targetCount = prevPlayerCount + 1
+
+        # a risk raise is a raise that is done outside e
+        if callRiskRaise and prevPlayer >= e:
+            bidFace = prevPlayerFace            
+            if diceInGame > targetCount:
+                bidCount = targetCount
+            else:
+                self.liar()
+
+        # normal raise - raising within the e bounds
+        elif callRaise:
+            if prevPlayerCount < e:
+                bidFace = prevPlayerFace
+                bidCount = targetCount
+                if diceInGame > targetCount:
+                    bidCount = targetCount
+                else:
+                    self.liar()
+            else:
+                if prevPlayerFace < 6:
+                    bidFace = prevPlayerFace + 1
+                    bidCount = 1
+                elif prevPlayerFace == 6 and bidCount < e:
+                    bidCount = targetCount
+                elif prevPlayerFace == 6 and bidCount > e:
+                    self.liar()
+        else:
+            self.liar()
+
+        return [bidFace, bidCount]
+
+                
+    def liar(self) -> str:
+        '''
+        Summary:
+        ---
+        Showdown. winner is decided between current and previous player. loser 
+        loses one die
+
+        '''
+        return 'liar'
