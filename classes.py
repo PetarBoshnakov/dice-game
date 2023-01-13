@@ -132,11 +132,11 @@ class GameController():
         '''
         
         for i in range(1,self.nplayers + 1):
-            playerX = Player(f'Player {i}')
+            player_x_name = Player(f'Player {i}')
             dice_n_count = 5
             hand = self.game_generate_hand(dice_n_count)
             self.player_stats[i-1] = {
-                'Name': playerX.Name,
+                'Name': player_x_name.Name,
                 'Face': 0, 
                 'Count': 0, 
                 'DiceN': dice_n_count, 
@@ -450,6 +450,22 @@ class GameController():
             self.players_left = 1
         else:
             self.players_left -= 1
+    
+    def set_prev_player(self) -> None:
+        '''
+        Summary:
+        ---
+        It's the previous player turn now
+
+        '''
+
+        if self.current_player == 0:
+            self.current_player = self.nplayers - 1
+        else:
+            self.current_player =  self.current_player - 1
+        
+        if self.player_stats[self.current_player]['Status'] == 'out':
+            self.set_prev_player()
 
     def set_start_current_player(self) -> None:
         '''
@@ -458,7 +474,6 @@ class GameController():
         Sets a random player for game start
 
         '''
-
         self.current_player = random.randrange(start= 0,stop= self.nplayers,step= 1)
 
     def set_turn_counter_zero(self) -> None:
@@ -542,6 +557,18 @@ class CommandInterface:
 
         if type == 'bid':
            return self.process_bid(cmd)
+
+    def get_bot_cmd(self, cmd: str):
+        '''
+        Summary:
+        ---
+        Gets a cmd from a bot in the format 'int int' or 'liar' and processes it. 
+
+        Returns:
+        a bot command in the format: [int, int] or 'liar'
+        '''
+
+        return self.process_bid(cmd)
 
     def process_num(self, cmd: str) -> int:
         '''
@@ -706,11 +733,18 @@ class Bot(Player):
         self.truthScore = {} # holds a arbitratry value deciding how hones a player is
 
     def is_wild_mode(self, game: GameController):
+        '''
+        Summary:
+        ---
+        Returns true if wild mode else false
+
+        '''
+
         if game.get_game_mode() == 'wild':
             return True
         return False    
 
-    def bid(self, game: GameController):
+    def bid(self, game: GameController) -> str:
         '''
         Summary:
         ---
@@ -737,63 +771,51 @@ class Bot(Player):
         e = math.floor((1/6) * dice_in_game)
         
         if wild_mode and prev_player_face > 1:
-            prev_player_count
+            prev_player_count = prev_player_count * 2
             e *= 2
-
-        if prev_player_count > e:
-            self.liar()
         
-        prob_after_raise = stats.mass_prob(dice_in_game,prev_player_count + 1)
+        prob_after_raise = 1 - stats.mass_prob(dice_in_game, prev_player_count + 1) * 100
 
         # percentage sum must be 100
         raise_norm_per = prob_after_raise
+        raise_risk_per = 0.2 * raise_norm_per
 
         choice_val = random.randint(0,100)
+
         call_raise = choice_val <= raise_norm_per
-        call_risk_raise = choice_val <= (0.3 * raise_norm_per)
+        call_risk_raise = choice_val <= raise_risk_per
 
         bid_face = 0
         bid_count = 0
         # bid logic here
         target_count = prev_player_count + 1
+        
+
+        # opening raise
+        if prev_player_face == 0:
+            bid_face = 1
+            bid_count = 1
 
         # a risk raise is a raise that is done outside e
-        if call_risk_raise and prev_player >= e:
+        elif call_risk_raise and prev_player_count >= e:
             bid_face = prev_player_face            
             if dice_in_game > target_count:
                 bid_count = target_count
             else:
-                self.liar()
+                return 'liar'
 
         # normal raise - raising within the e bounds
         elif call_raise:
-            if prev_player_count < e:
+            if prev_player_count < e and dice_in_game > target_count:
                 bid_face = prev_player_face
                 bid_count = target_count
-                if dice_in_game > target_count:
-                    bid_count = target_count
-                else:
-                    self.liar()
-            else:
-                if prev_player_face < 6:
-                    bid_face = prev_player_face + 1
-                    bid_count = 1
-                elif prev_player_face == 6 and bid_count < e:
-                    bid_count = target_count
-                elif prev_player_face == 6 and bid_count > e:
-                    self.liar()
+                bid_count = target_count
+            elif prev_player_face < 6:
+                bid_face = prev_player_face + 1
+                bid_count = 1
+            elif prev_player_face == 6 and bid_count < e:
+                bid_count = target_count
         else:
-            self.liar()
+            return 'liar'
 
-        return [bid_face, bid_count]
-
-                
-    def liar(self) -> str:
-        '''
-        Summary:
-        ---
-        Showdown. winner is decided between current and previous player. loser 
-        loses one die
-
-        '''
-        return 'liar'
+        return f'{bid_face} {bid_count}'

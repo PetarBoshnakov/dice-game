@@ -90,6 +90,7 @@ def play_game(game: classes.GameController):
     cmdI = classes.CommandInterface()
     game = classes.GameController(game.nplayers)
     game.set_start_current_player()
+    bot = classes.Bot('KilaPlaya')
 
     print("Bid in the form of 'int int' or 'liar'. Press 'q' to quit the current game.")
     
@@ -104,11 +105,20 @@ def play_game(game: classes.GameController):
         # check if we have a winner
         if game.get_players_left() == 1:
             misc.print_sep()
-            print(f"Playr {curr_player_stats['Name']} is the winner!")
+            curr_player = game.get_current_player()
+            curr_player_stats = game.get_player_stats(curr_player)
+            print(f"{curr_player_stats['Name']} is the winner!")
             break
         
         # get current player input
-        cmd = cmdI.get_cmd('Your bid: ', 'bid')
+        curr_player = game.get_current_player()
+        if curr_player > 0:
+            bot_cmd = bot.bid(game)
+            cmd = cmdI.get_bot_cmd(bot_cmd)
+            print(f'Bot bid: {cmd}')
+        else:
+            cmd = cmdI.get_cmd('Your bid: ', 'bid')
+
         playerBid = cmd
 
         # check if the prev player is a liar and adjust dice count accordingly
@@ -135,6 +145,8 @@ def play_game(game: classes.GameController):
             if dice_counts[prev_player_face] >= prev_player_count:
                 print(f"{curr_player_stats['Name']} loses 1 die")
                 game.set_dice_decr(curr_player)
+                if curr_player_stats['DiceN'] == 0:
+                    game.set_next_player()
                 game.set_next_round()
                 game.set_turn_counter_zero()
                 continue
@@ -142,6 +154,8 @@ def play_game(game: classes.GameController):
             else:
                 print(f"{prev_player_stats['Name']} loses 1 die")
                 game.set_dice_decr(prev_player)
+                if prev_player_stats['DiceN'] > 0:
+                    game.set_prev_player()
                 game.set_next_round()
                 game.set_turn_counter_zero()
                 continue

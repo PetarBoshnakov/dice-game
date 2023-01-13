@@ -58,6 +58,3 @@ def mass_prob(n, x):
         prob  = prob_cal(n,i)
         prob_mass += prob
     return 1 - prob_mass
-
-
-print(mass_prob(20,3))
