@@ -730,7 +730,8 @@ class Bot(Player):
     def __init__(self, name: str):
         super().__init__(name)
 
-        self.truthScore = {} # holds a arbitratry value deciding how hones a player is
+        self.false_score = {'score': 0.3, 'true': 2, 'false': 1} # holds a arbitratry value deciding how hones a player is
+    
 
     def is_wild_mode(self, game: GameController):
         '''
@@ -744,46 +745,63 @@ class Bot(Player):
             return True
         return False    
 
-    def bid(self, game: GameController) -> str:
-        '''
-        Summary:
-        ---
-        Returns a bid
-
-        Parameters:
-        ---
-        game: a game controller class instance to act upon
-
-        '''
+    def action(self, game: GameController) -> str:
         
+        WILD_MODE_MULTIPL = 2
+        DEFAULT_LIER_SCORE = 0.7
+        RISK_RAISE_PROB = 0.4
+
         # game globals
         wild_mode = self.is_wild_mode(game)
         dice_in_game = game.get_n_dice()
         
-
         # player state
-        curr_player = game.get_current_player()
-        prev_player = game.get_prev_player(curr_player)
-        prev_player = game.get_player_stats(prev_player)
-        prev_player_face = prev_player['Face']
-        prev_player_count = prev_player['Count']
+        curr_player_pos = game.get_current_player()
+        prev_player_pos = game.get_prev_player(curr_player_pos)
+        prev_player_stats = game.get_player_stats(prev_player_pos)
+        curr_player_stats = game.get_player_stats(curr_player_pos)
+        curr_player_hand_limits = self.generate_hand_limits(curr_player_stats)
+
+        prev_player_face = prev_player_stats['Face']
+        prev_player_count = prev_player_stats['Count']
+
+        curr_player_same_face_count = curr_player_stats['Hand'].count(prev_player_face)
+
 
         e = math.floor((1/6) * dice_in_game)
-        
+
+        # wild mode setup
         if wild_mode and prev_player_face > 1:
-            prev_player_count = prev_player_count * 2
-            e *= 2
-        
-        prob_after_raise = 1 - stats.mass_prob(dice_in_game, prev_player_count + 1) * 100
+            prev_player_count *= WILD_MODE_MULTIPL
+            curr_player_same_face_count *= WILD_MODE_MULTIPL
+            e *= WILD_MODE_MULTIPL
+
+        # update player truth score        
+        if prev_player_pos == 0 and game.get_turn_counter() > 0:
+            cmd = [prev_player_face, prev_player_count]
+            self.eval_truth_bet(cmd, prev_player_stats, e)
+
+        # calculating dice probabilities
+        if curr_player_same_face_count > 0 and curr_player_same_face_count <= prev_player_count:
+            prob_prev_player_higher = stats.bayes_prob(dice_in_game, curr_player_same_face_count, prev_player_count) * 100
+        else:
+            prob_prev_player_higher = stats.mass_prob(dice_in_game, prev_player_count) * 100
+
 
         # percentage sum must be 100
-        raise_norm_per = prob_after_raise
-        raise_risk_per = 0.2 * raise_norm_per
+        lier_score = 0.7 # actually this is the bmot's lier score
+        if prev_player_pos == 0:
+           lier_score = self.false_score['score'] # here the player lier score is set
+        liar_perc = (100 - prob_prev_player_higher) * lier_score
+        risk_raise_perc = RISK_RAISE_PROB * liar_perc
+        print(f'player liar score: {lier_score}')
+        print(f'liar perc: {liar_perc}')
+        print(f'player false score: {self.false_score}')
 
         choice_val = random.randint(0,100)
 
-        call_raise = choice_val <= raise_norm_per
-        call_risk_raise = choice_val <= raise_risk_per
+        call_raise = choice_val > liar_perc
+        call_bluff_raise = choice_val < risk_raise_perc
 
         bid_face = 0
         bid_count = 0
@@ -793,29 +811,131 @@ class Bot(Player):
 
         # opening raise
         if prev_player_face == 0:
-            bid_face = 1
+            opening_hand = self.get_opening_hand(curr_player_stats)
+            bid_face = opening_hand[0]
             bid_count = 1
-
-        # a risk raise is a raise that is done outside e
-        elif call_risk_raise and prev_player_count >= e:
+        elif call_bluff_raise and prev_player_count <= e:
             bid_face = prev_player_face            
-            if dice_in_game > target_count:
+            if target_count < dice_in_game:
                 bid_count = target_count
+        # the raise logic is here
+        elif call_raise:
+            curr_player_hand_limits_count = curr_player_hand_limits[prev_player_face] 
+            if curr_player_same_face_count > 0 and curr_player_hand_limits_count > 0 and curr_player_same_face_count < dice_in_game:
+                bid_face = prev_player_face
+                bid_count = prev_player_count + curr_player_hand_limits[prev_player_face]
+            elif curr_player_same_face_count < dice_in_game:
+                for i in range(1,7):
+                    if curr_player_hand_limits[i] > 0 and i > prev_player_face:
+                        bid_face = i
+                        bid_count = 1
+                        return f'{bid_face} {bid_count}'
+                if prev_player_count + 1 < e:
+                    return f'{prev_player_face} {prev_player_count + 1}'
+                return 'liar'
             else:
                 return 'liar'
-
-        # normal raise - raising within the e bounds
-        elif call_raise:
-            if prev_player_count < e and dice_in_game > target_count:
-                bid_face = prev_player_face
-                bid_count = target_count
-                bid_count = target_count
-            elif prev_player_face < 6:
-                bid_face = prev_player_face + 1
-                bid_count = 1
-            elif prev_player_face == 6 and bid_count < e:
-                bid_count = target_count
         else:
             return 'liar'
 
         return f'{bid_face} {bid_count}'
+        
+    def generate_hand_limits(self, player_stats: dict) -> dict:
+        '''
+        Summary:
+        ---
+        Generates a summary of all faces and their counts in the current hand
+
+        Parameters:
+        ---
+        player_stats: a dictionary holding the player stats
+
+        Returns:
+        ---
+        a dictionary with the hand distirbtuion {1:2, 2:3.. etc}
+        '''
+
+        hand = player_stats['Hand']
+
+        hand_glob = {
+            1:0,
+            2:0,
+            3:0,
+            4:0,
+            5:0,
+            6:0
+        }
+
+        for i in range(1,7):
+            hand_glob[i] += hand.count(i)
+
+        return hand_glob
+    
+    def eval_truth_bet(self, bet: list, player_stats: dict, e: int) -> None:
+        '''
+        Summarty:
+        ---
+        Evaluates whether the hooman lied in their bet or not.
+
+        Parameters:
+
+        bet: the bet to be evaluated
+
+        hand: the hand to eval the bet against
+
+        e: expected value for the current game run
+
+        Returns:
+        None. Updates the false_score of the bot
+        '''
+
+        
+        stated_face = int(bet[0])
+        stated_count = int(bet[1])
+
+        hand_lim = self.generate_hand_limits(player_stats)
+
+        if hand_lim[stated_face] >= stated_count or (hand_lim[stated_face] > 0 and stated_count <= e):
+            self.set_update_truth_score(1)
+        else:
+            self.set_update_truth_score(0)
+        
+    
+    def set_update_truth_score(self, direction: int) -> None:
+        '''
+        Summary:
+        ---
+        Increments or decrements the truth score. The truth score for the player starts
+        as 1 or 100% and it is continuously updated based on the showdowns. If the 
+        player didnt lie the truth score is updated accordingly
+
+        Parameters:
+        ---
+        direction: 1 or 0. the number indicates pos or negative reinforcement
+        '''
+
+        if direction == 1:
+            self.false_score['true'] += 1
+        elif direction == 0:
+            self.false_score['false'] += 1
+        else:
+            print('Please provide a valid truth score')
+            return
+        
+        true_cases = self.false_score['true']
+        false_cases = self.false_score['false']
+        self.false_score['score'] = false_cases / (true_cases + false_cases) 
+
+    def get_opening_hand(self, curr_player_stats: dict) -> str:
+        '''
+        Summary:
+        ---
+        Returns the weakest hand
+        '''
+        hand = self.generate_hand_limits(curr_player_stats)
+
+        for face in range(1,7):
+            hand_cnt = hand[face] 
+            if hand_cnt > 0:
+                return [face,hand_cnt]
+
