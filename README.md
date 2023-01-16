@@ -5,6 +5,7 @@
 1. [How to run](#how-to-run)
 1. [Rules of the game](#rules-of-the-game)
 1. [How to play the game](#how-to-play-the-game)
+1. [Design and architechture](#design-and-architecture)
 1. [Credits and Acknowledgements](#credits-and-acknowledgements)
 1. [Contact and feedback](#contact)
 
@@ -14,9 +15,12 @@ This game is developed as a project invitation that I found on the Strypes porta
 
 ## System Requirements
 ---
-Operating system: Windows [^1]
+Operating system: [^1]Windows 
+
 Python: 3.9 or higher
+
 Dependencies: no dependencies, packages or wheels needed 
+
 System requirements: as long as the machine can run a console it should be just fine
 
 [^1]: The game is developed in Python so it should be platform agnostic. However, there might be some glitches when used on other operating systems when system calls are concerned.
@@ -46,7 +50,7 @@ You are provided with a settings menu in the form of:
 1. New game
 2. Exit
 
-In order for you to navigate the menu you need to input the number of the menu item. For example, if you want to navigate the New Game menu you need to press 1 and then enter. There are several setup settings that can be done in the game. You can:
+In order for you to navigate the menu you need to input the number of the menu item. For example, if you want to navigate the New Game menu, you need to press 1 and then enter. There are several setup settings that can be done in the game. You can:
 
 > __Choose the number of players that you want to go against__
 
@@ -54,15 +58,23 @@ In order for you to navigate the menu you need to input the number of the menu i
 
 Once you are set you can hit on start game and enjoy the challenge.
 
+## Design and Architecture
+---
+
+The game is developed using OOP paradigm as well as 
+
+__Useful links:__
+> [Liar's dice](https://en.wikipedia.org/wiki/Liar%27s_dice)
+
+> [Bayes theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem)
+
+> [More on Bayes theorem](https://medium.com/swlh/bayes-theorem-probability-818deb5d1613)
+
+> [Conditional probability](https://www.nagwa.com/en/explainers/403141497934/)
+
 ## Credits and Acknowledgements
 ---
-Special thanks to Dimitar Gradev and Huben Keranchev regarding their ideas on the code style or organization. Also, absolute acknowledgements for the idea of this README file.
-
-Useful links:
-[Liar's dice](https://en.wikipedia.org/wiki/Liar%27s_dice)
-[Bayes theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem)
-[More on Bayes theorem](https://medium.com/swlh/bayes-theorem-probability-818deb5d1613)
-[Conditional probability](https://www.nagwa.com/en/explainers/403141497934/)
+Special thanks to Dimitar Gradev and Huben Keranchev regarding their creative ideas on the code style and organization. Also, absolute acknowledgements for the idea of this README file!
 
 ## Contact and feedback
 ---
