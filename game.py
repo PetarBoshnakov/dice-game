@@ -51,34 +51,37 @@ def game_menu():
 
         if selection == 'New game':
             push_menu(path_stack, game_menu.game_menu_new_game)
-            game_menu.print_vals(curr_menu)
 
         elif selection == 'Start':
-            print('start game')
+
+            misc.print_sent('starting game....')
             play_game(game_new) 
 
         elif selection == 'Number of players':
             prompt = 'Please enter the number of players (default is 2): '
             cmd = cmd_i.get_cmd(prompt, 'num')
             game_new.set_nplayers_game(cmd)
-            print(f'Number of players: {game_new.nplayers}')
+            misc.print_sent(f'Number of players: {game_new.nplayers}')
+            misc.action_to_continue()
 
         elif selection == 'Game mode':
             prompt = "Please enter the game mode - it can only be 'classic' or 'wild': "
             cmd = input(prompt)
             game_new.set_game_mode(cmd)
-            print(f'Game mode: {game_new.game_mode}')
+            misc.print_sent(f'Game mode: {game_new.game_mode}')
+            misc.action_to_continue()
+
 
         elif selection == 'Exit':
-            print('Sad to see you go ;(')
+            misc.print_sent('Sad to see you go ;(')
             sys.exit()
 
         elif selection == 'Back':
             path_stack.pop()
         
         else:
-            print('Please select a valid menu item by inputing a menu number. For example 1 unless advised otherwise.')
-        
+            misc.print_sent('Please select a valid menu item by inputing a menu number. For example 1 unless advised otherwise.')
+            misc.action_to_continue
 
 def play_game(game: classes.GameController):
     '''
@@ -92,34 +95,42 @@ def play_game(game: classes.GameController):
     game.set_start_current_player()
     bot = classes.Bot('KilaPlaya')
 
-    print("Bid in the form of 'int int' or 'liar'. Press 'q' to quit the current game.")
+    misc.print_sent("Bid in the form of 'int int' or 'liar'. Press 'q' to quit the current game.")
+    misc.action_to_continue()
     
     # game loop
     while True:
-
+        
+        # curr_player = game.get_current_player()
+        # turn_counter = game.get_turn_counter()
+        # if curr_player != 0 and turn_counter == 0:
+        #     misc.action_to_continue()
         misc.print_sep()
-
-        # print game state
-        game.print_game_state()
 
         # check if we have a winner
         if game.get_players_left() == 1:
             misc.print_sep()
             curr_player = game.get_current_player()
             curr_player_stats = game.get_player_stats(curr_player)
-            print(f"{curr_player_stats['Name']} is the winner!")
+            misc.print_sent(f"{curr_player_stats['Name']} is the winner!")
             break
+        
+        # print game state
+        game.print_game_state()
+
         
         # get current player input
         curr_player = game.get_current_player()
         if curr_player > 0:
-            bot_cmd = bot.bid(game)
+            bot_cmd = bot.action(game)
             cmd = cmdI.get_bot_cmd(bot_cmd)
-            print(f'Bot bid: {cmd}')
+            bot.print_bot_thinkig()
+            if cmd == 'liar':
+                misc.print_sent('Bot bid ==> liar')
+            else:
+                misc.print_sent(f'Bot bid ==> Face:{cmd[0]} :: Count:{cmd[1]}')
         else:
-            cmd = cmdI.get_cmd('Your bid: ', 'bid')
-
-        playerBid = cmd
+            cmd = cmdI.get_cmd('Your bid (face, count): ', 'bid')
 
         # check if the prev player is a liar and adjust dice count accordingly
         turn_counter = game.get_turn_counter()
@@ -132,7 +143,7 @@ def play_game(game: classes.GameController):
             prev_player_stats = game.get_player_stats(prev_player)
             prev_player_face = game.get_player_stats(prev_player)['Face']
             prev_player_count = game.get_player_stats(prev_player)['Count']
-            
+         
             # wild mode setting
             game_mode = game.get_game_mode()
             if game_mode == 'wild' and prev_player_face > 1:
@@ -143,32 +154,38 @@ def play_game(game: classes.GameController):
 
             # sets the turn counter to zero since we are dealing new hands
             if dice_counts[prev_player_face] >= prev_player_count:
-                print(f"{curr_player_stats['Name']} loses 1 die")
+                misc.print_sent(f"{curr_player_stats['Name']} loses 1 die")
                 game.set_dice_decr(curr_player)
                 if curr_player_stats['DiceN'] == 0:
                     game.set_next_player()
+
+                # update hooman_player_truth score
                 game.set_next_round()
                 game.set_turn_counter_zero()
+                misc.action_to_continue()
                 continue
             
             else:
-                print(f"{prev_player_stats['Name']} loses 1 die")
+                misc.print_sent(f"{prev_player_stats['Name']} loses 1 die")
                 game.set_dice_decr(prev_player)
                 if prev_player_stats['DiceN'] > 0:
                     game.set_prev_player()
                 game.set_next_round()
                 game.set_turn_counter_zero()
+                misc.action_to_continue()
                 continue
         
         # check for input on first round
         # if invalid input - again
         valid_bid = game.is_valid_bid(cmd, game.get_n_dice())
         if turn_counter == 0 and valid_bid:
-            game.set_player_bid(game.current_player,playerBid)
+            game.set_player_bid(game.current_player,cmd)
             game.set_next_player()
             game.set_turn_counter_incr()
+            misc.action_to_continue()
             continue
         elif turn_counter == 0 and not valid_bid:
+            misc.action_to_continue()
             continue
         
         # checks the input after first round
@@ -177,6 +194,7 @@ def play_game(game: classes.GameController):
         curr_player_stats = game.get_player_stats(curr_player)
         prev_player_stats = game.get_player_stats(prev_player)
         if not game.is_valid_bid(cmd, game.get_n_dice(), prev_player_stats):
+            misc.action_to_continue()
             continue
         
 
@@ -184,6 +202,7 @@ def play_game(game: classes.GameController):
         game.set_player_bid(game.get_current_player(),cmd)
         game.set_next_player()
         game.set_turn_counter_incr()
+        misc.action_to_continue()
         
 
 

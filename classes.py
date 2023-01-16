@@ -5,8 +5,10 @@ import random
 import misc
 import math
 import stats
+import time 
 
-  
+DEBUG_MODE = 'off'
+
 class GameController():
     '''
     Summary:
@@ -108,20 +110,20 @@ class GameController():
         curr_player_face_higher = bid_in_limit and current_player_face > prev_player_face
         curr_player_ge_face = bid_in_limit and current_player_face >= prev_player_face
         # equal faces but higher count 
-        curr_player_higher_count =  bid_in_limit and curr_player_ge_face and current_player_count > prev_player_count
+        curr_player_higher_count =  bid_in_limit and curr_player_ge_face or current_player_count > prev_player_count
 
         if not bid_in_limit:
-            print('the dice must have a valid side and adequate face count')
+            misc.print_sent('the dice must have a valid side and adequate face count')
         
         if not curr_player_ge_face:
-            print('current player incorrect face')
+            misc.print_sent('current player incorrect face')
             
         if not curr_player_higher_count:
-            print('current player incorrect count')
+            misc.print_sent('current player incorrect count')
 
 
 
-        return bid_in_limit and (curr_player_higher_count or curr_player_face_higher)
+        return bid_in_limit and curr_player_higher_count and curr_player_ge_face
 
     def ini_players(self) -> None:    
         '''
@@ -224,7 +226,7 @@ class GameController():
 
         return self.player_stats[player]
 
-    def get_prev_player(self, currPlayer) -> int:
+    def get_prev_player(self, curr_player) -> int:
         '''
         Summery:
         ---
@@ -232,10 +234,10 @@ class GameController():
 
         '''
 
-        if currPlayer == 0:
+        if curr_player == 0:
             prev_player = self.nplayers - 1
         else:
-            prev_player =  currPlayer - 1
+            prev_player =  curr_player - 1
         
         if self.player_stats[prev_player]['Status'] == 'out':
             prev_player = self.get_prev_player(prev_player)
@@ -272,7 +274,7 @@ class GameController():
 
         return self.turn_counter
 
-    def print_game_state(self) -> None:
+    def print_game_state(self, DEBUG_MODE: str = 'off') -> None:
         '''
         Summary:
         ---
@@ -284,14 +286,39 @@ class GameController():
 
         currentPlayer: the current Player index - decides whose turn it is
 
+        debug: debug mode - showing all player stats. Can take two values 'debug' or 'off'.
+
+        It is off by default
+
         '''
 
         player_vals = self.player_stats.keys()
-        for cntr, playerVal in enumerate(player_vals):
-            if self.current_player == cntr:
-                print(f'==>{playerVal}: {self.player_stats[playerVal]}')
-            else:
-                print(f'   {playerVal}: {self.player_stats[playerVal]}')
+        curr_player = self.get_current_player()
+        prev_player = self.get_prev_player(curr_player)
+        
+
+        if DEBUG_MODE == 'off':
+            for cntr, playerVal in enumerate(player_vals):
+                to_print = f"{self.player_stats[playerVal]['Name']} ::: Face: {self.player_stats[playerVal]['Face']} ::: Count: {self.player_stats[playerVal]['Count']} ::: Number of Dice: {self.player_stats[playerVal]['DiceN']}"
+
+                if curr_player == cntr and curr_player == 0:
+                    to_print = f"{to_print} ::: Your dice: {self.player_stats[playerVal]['Hand']}"
+                    misc.print_sent(f'==>{to_print}')
+                elif curr_player == cntr:
+                    misc.print_sent(f'==>{to_print}')
+                elif prev_player == cntr:
+                    misc.print_sent(f'   {to_print} <== Previous Player')    
+                else:
+                    misc.print_sent(f'   {to_print}')
+
+        elif DEBUG_MODE == 'debug':
+            for cntr, playerVal in enumerate(player_vals):
+                to_print = f'{playerVal}: {self.player_stats[playerVal]}'
+
+                if self.current_player == cntr:
+                    misc.print_sent(f'==>{to_print}')
+                else:
+                    misc.print_sent(f'   {to_print}')
 
     def set_dice_decr(self, player) -> None:
         '''
@@ -326,7 +353,7 @@ class GameController():
             self.game_mode = mode
         else:
             misc.print_sep()
-            print(f"Invalid game mode - {mode}! Mode can be only 'classic' or 'wild' Game mode set to default: 'classic'")
+            misc.print_sent(f"Invalid game mode - {mode}! Mode can be only 'classic' or 'wild' Game mode set to default: 'classic'")
 
     def set_next_player(self) -> None:
         '''
@@ -387,7 +414,7 @@ class GameController():
             return nplayers    
         else:
             misc.print_sep()
-            print(f'{nplayers} is not valid input. The number of players must be an integer. The player count is set to the default: 2')
+            misc.print_sent(f'{nplayers} is not valid input. The number of players must be an integer. The player count is set to the default: 2')
             return 2
             
     def set_nplayers_game(self, num: int) -> None:
@@ -405,7 +432,7 @@ class GameController():
 
         if not isinstance(num, int) or num < 2:
             misc.print_sep()
-            print(f"Invalid number of players: {num}. The number of players must be an integer greater than 1. Number of players set to default: 2")
+            misc.print_sent(f"Invalid number of players: {num}. The number of players must be an integer greater than 1. Number of players set to default: 2")
             
             self.nplayers = 2
         else:
@@ -446,7 +473,7 @@ class GameController():
         temp_val =  self.players_left - 1
 
         if temp_val == 0:
-            print('players cannot be less than 1')
+            misc.print_sent('players cannot be less than 1')
             self.players_left = 1
         else:
             self.players_left -= 1
@@ -596,7 +623,7 @@ class CommandInterface:
             return val
         except:
             misc.print_sep()
-            print('Please provide correct number format')
+            misc.print_sent('Please provide correct number format')
             return None
 
     def process_bid(self, cmd: str) -> list:
@@ -627,7 +654,7 @@ class CommandInterface:
                 valsInt.append(int(val))
             except:
                 misc.print_sep()
-                print(f"Wrong bid format: {cmd}. Format must be 'int int' or 'liar' !")
+                misc.print_sent(f"Wrong bid format: {cmd}. Format must be 'int int' or 'liar' !")
                 return [0,0]
         return valsInt
             
@@ -701,7 +728,7 @@ class GameMenu:
         '''
 
         for order,val in enumerate(vals, start=1):
-            print(f'{order}. {val}')
+            misc.print_sent(f'{order}. {val}')
 
 class Player:
     '''
@@ -794,9 +821,11 @@ class Bot(Player):
            lier_score = self.false_score['score'] # here the player lier score is set
         liar_perc = (100 - prob_prev_player_higher) * lier_score
         risk_raise_perc = RISK_RAISE_PROB * liar_perc
-        print(f'player liar score: {lier_score}')
-        print(f'liar perc: {liar_perc}')
-        print(f'player false score: {self.false_score}')
+
+        if DEBUG_MODE == 'debug':
+            misc.print_sent(f'player liar score: {lier_score}')
+            misc.print_sent(f'liar perc: {liar_perc}')
+            misc.print_sent(f'player false score: {self.false_score}')
 
         choice_val = random.randint(0,100)
 
@@ -919,7 +948,7 @@ class Bot(Player):
         elif direction == 0:
             self.false_score['false'] += 1
         else:
-            print('Please provide a valid truth score')
+            misc.print_sent('Please provide a valid truth score')
             return
         
         true_cases = self.false_score['true']
@@ -938,4 +967,46 @@ class Bot(Player):
             hand_cnt = hand[face] 
             if hand_cnt > 0:
                 return [face,hand_cnt]
+    
+    def print_bot_thinkig(self):
+        '''
+        Summary:
+        ---
+        Wastes some time to create the illusion of thought. Prints a funny phrase 
+        in the process
+        '''
+
+
+        funny_phrases = [
+            "Calculating the age of the universe",
+            "Multiplication of variation",
+            "Reversing the effect of the Big Bang",
+            "Waiting at the coffee que",
+            "Hold my beer",
+            "Ah, that's easy just need a quick permutation calculation",
+            "You gotta me kidding me",
+            "Got you there, bruh?",
+            "You need to up your game... Calculating your chances...",
+            "A plane crashd on the border of Canada and USA. Where should the survivors be buried?",
+            "You think I'm lying?",
+            "Not, AI but close.."
+        ]
+
+        chosen_phrase = random.choice(funny_phrases)
+        to_print = f'Bot: {chosen_phrase}'
+        time_step = 0.025
+        for i in range(len(to_print)):
+           print(to_print[i], end='', flush=True)
+           time.sleep(time_step)
+
+        wait_multpl = random.randint(2,5)
+        wait_fraction = random.randint(60,86) / 100
+
+        to_print = '.'*wait_multpl
+        for i in range(len(to_print)):
+           print(to_print[i], end='', flush=True)
+           time.sleep(wait_fraction)
+        print()
+
+    
 
