@@ -80,9 +80,4 @@ Special thanks to Dimitar Gradev and Huben Keranchev regarding their creative id
 ---
 
 Petar Boshnakov
-
-[github](https://github.com/PetarBoshnakov)
-
-[github project page](https://github.com/PetarBoshnakov/dice-game)
-
-[Report bugs](https://github.com/PetarBoshnakov/dice-game/issues)
+##### [github](https://github.com/PetarBoshnakov) | [github project page](https://github.com/PetarBoshnakov/dice-game) | [bugs and feedback](https://github.com/PetarBoshnakov/dice-game/issues)
