@@ -274,7 +274,7 @@ class GameController():
 
         return self.turn_counter
 
-    def print_game_state(self, DEBUG_MODE: str = 'off') -> None:
+    def print_game_state(self) -> None:
         '''
         Summary:
         ---
@@ -296,7 +296,6 @@ class GameController():
         curr_player = self.get_current_player()
         prev_player = self.get_prev_player(curr_player)
         
-
         if DEBUG_MODE == 'off':
             for cntr, playerVal in enumerate(player_vals):
                 to_print = f"{self.player_stats[playerVal]['Name']} ::: Face: {self.player_stats[playerVal]['Face']} ::: Count: {self.player_stats[playerVal]['Count']} ::: Number of Dice: {self.player_stats[playerVal]['DiceN']}"
@@ -311,7 +310,7 @@ class GameController():
                 else:
                     misc.print_sent(f'   {to_print}')
 
-        elif DEBUG_MODE == 'debug':
+        elif DEBUG_MODE == 'on':
             for cntr, playerVal in enumerate(player_vals):
                 to_print = f'{playerVal}: {self.player_stats[playerVal]}'
 
@@ -774,9 +773,8 @@ class Bot(Player):
 
     def action(self, game: GameController) -> str:
         
-        WILD_MODE_MULTIPL = 2
-        DEFAULT_LIER_SCORE = 0.7
-        RISK_RAISE_PROB = 0.4
+        wild_mode_multipl = 2
+        risk_raise_prob = 0.4
 
         # game globals
         wild_mode = self.is_wild_mode(game)
@@ -799,9 +797,9 @@ class Bot(Player):
 
         # wild mode setup
         if wild_mode and prev_player_face > 1:
-            prev_player_count *= WILD_MODE_MULTIPL
-            curr_player_same_face_count *= WILD_MODE_MULTIPL
-            e *= WILD_MODE_MULTIPL
+            prev_player_count *= wild_mode_multipl
+            curr_player_same_face_count *= wild_mode_multipl
+            e *= wild_mode_multipl
 
         # update player truth score        
         if prev_player_pos == 0 and game.get_turn_counter() > 0:
@@ -820,9 +818,9 @@ class Bot(Player):
         if prev_player_pos == 0:
            lier_score = self.false_score['score'] # here the player lier score is set
         liar_perc = (100 - prob_prev_player_higher) * lier_score
-        risk_raise_perc = RISK_RAISE_PROB * liar_perc
+        risk_raise_perc = risk_raise_prob * liar_perc
 
-        if DEBUG_MODE == 'debug':
+        if DEBUG_MODE == 'on':
             misc.print_sent(f'player liar score: {lier_score}')
             misc.print_sent(f'liar perc: {liar_perc}')
             misc.print_sent(f'player false score: {self.false_score}')
@@ -995,6 +993,7 @@ class Bot(Player):
         chosen_phrase = random.choice(funny_phrases)
         to_print = f'Bot: {chosen_phrase}'
         time_step = 0.025
+        print()
         for i in range(len(to_print)):
            print(to_print[i], end='', flush=True)
            time.sleep(time_step)
