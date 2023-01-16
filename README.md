@@ -61,7 +61,36 @@ Once you are set you can hit on start game and enjoy the challenge.
 ## Design and Architecture
 ---
 
-The game is developed using OOP paradigm as well as 
+The game is developed using OOP paradigm as well as the functional programming concept. No object mutations are allowed. 
+
+Overview by files:
+
+### - main.py
+### - game.py
+### - classes.py
+### - misc.py
+### - stats.py
+
+> main.py: 
+- is used for starting the game
+- sets major game stats at startup
+- provides help on how to use the program
+
+> game.py:
+- contains the menu logic
+- contains the game loop
+- objects change their states through the game.py as the game is played
+
+> classes.py:
+- contains all user defined objects used for the game
+- classes: Player, Bot, GameMenu, CommandInterface, GameController
+
+> misc.py
+- contains helper functions
+
+> stats.py
+- contains the statistical functions used for the game
+
 
 __Useful links:__
 > [Liar's dice](https://en.wikipedia.org/wiki/Liar%27s_dice)
