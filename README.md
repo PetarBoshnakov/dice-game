@@ -1,21 +1,32 @@
 # Readme
 
 1. [About](#about)
-2. [System requirements](#system-requirements)
-3. [Rules of the game](#rules-of-the-game)
-4. [How to play the game](#how-to-play-the-game)
-5. [contact](#contact)
+1. [System requirements](#system-requirements)
+1. [How to run](#how-to-run)
+1. [Rules of the game](#rules-of-the-game)
+1. [How to play the game](#how-to-play-the-game)
+1. [Credits and Acknowledgements](#credits-and-acknowledgements)
+1. [Contact and feedback](#contact)
 
 ## About
 ---
-This game is developed as a project invitation that I found on the Strypes portal. I try to provide a solution to a very hard problem where players are forced to use deception. More on the game can be found in the section [Rules of the game](#rules-of-the-game)
+This game is developed as a project invitation that I found on the Strypes portal. I tried to provide a solution to a very hard problem where players are forced to use deception. More on the game can be found in the section [Rules of the game](#rules-of-the-game)
 
 ## System Requirements
 ---
-Operating system: Windows [^1] the game is dve
+Operating system: Windows [^1]
+Python: 3.9 or higher
+Dependencies: no dependencies, packages or wheels needed 
+System requirements: as long as the machine can run a console it should be just fine
 
-[^1]: the game is developed
----
+[^1]: The game is developed in Python so it should be platform agnostic. However, there might be some glitches when used on other operating systems when system calls are concerned.
+
+## How to run
+To play the game you will need to run it directly from a console. To quickly start the game you can type:
+
+> main.py -start
+
+If you want to explore the available options you can use a __-help__ argument instead. At the moment the other main option is __-debug__. This option reveals all player hands as well as some of the percentages used by the bot in the decision making process.
 
 ## Rules of the game
 ---
@@ -35,14 +46,25 @@ You are provided with a settings menu in the form of:
 1. New game
 2. Exit
 
-In order for you to navigate the menu you need to input the number of the menu item. For example, if you want to navigate the New Game menu you need to press 1 and then enter.
-There are several setup settings that can be done in the game. You can:
+In order for you to navigate the menu you need to input the number of the menu item. For example, if you want to navigate the New Game menu you need to press 1 and then enter. There are several setup settings that can be done in the game. You can:
 
 > __Choose the number of players that you want to go against__
 
 > __Choose the game mode - wild or classic__
 
-## Contact
+Once you are set you can hit on start game and enjoy the challenge.
+
+## Credits and Acknowledgements
+---
+Special thanks to Dimitar Gradev and Huben Keranchev regarding their ideas on the code style or organization. Also, absolute acknowledgements for the idea of this README file.
+
+Useful links:
+[Liar's dice](https://en.wikipedia.org/wiki/Liar%27s_dice)
+[Bayes theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem)
+[More on Bayes theorem](https://medium.com/swlh/bayes-theorem-probability-818deb5d1613)
+[Conditional probability](https://www.nagwa.com/en/explainers/403141497934/)
+
+## Contact and feedback
 ---
 
 Petar Boshnakov
@@ -50,3 +72,5 @@ Petar Boshnakov
 [github](https://github.com/PetarBoshnakov)
 
 [github project page](https://github.com/PetarBoshnakov/dice-game)
+
+[Report bugs](https://github.com/PetarBoshnakov/dice-game/issues)
