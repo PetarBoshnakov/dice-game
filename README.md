@@ -15,6 +15,8 @@ This game is developed as a project invitation that I found on the Strypes porta
 Operating system: Windows [^1] the game is dve
 
 [^1]: the game is developed
+---
+
 ## Rules of the game
 ---
 The game is played by two or more players. Five dice are used per player with dice cups used for concealment. The game is round-based. Each round, each player rolls a "hand" of dice under their cup and looks at their hand while keeping it concealed from other players. The first player begins his turn by bidding. A bid consists of announcing any face value and a number of dice. This bid is the player's claim as to how many dice with that particular value there are on the whole table. Turns rotate among the players in a clockwise order. Each player has two choices during their turn: 
