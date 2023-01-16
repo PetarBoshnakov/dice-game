@@ -4,7 +4,7 @@ import classes
 
 def main():
     
-    help_info = "Nice to see you here. This is my lovely implementation of Liar's Dice.\n\n\
+    help_info = "Nice to see you here. This is my lovely implementation of Liar's Dice game.\n\n\
             -help, -help, h, -h: to get the help menu \n\
             -start: to start the game \n\
             -debug: to enter debug mode revealing system information on the player and the bot"
