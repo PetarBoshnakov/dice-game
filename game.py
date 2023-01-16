@@ -4,7 +4,6 @@ import classes
 import sys
 import misc
 
-
 def push_menu(stak: list, menu: list):
     '''
     Summary:
