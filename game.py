@@ -65,7 +65,8 @@ def game_menu():
 
         elif selection == 'Game mode':
             prompt = "Please enter the game mode - it can only be 'classic' or 'wild': "
-            cmd = input(prompt)
+            misc.print_sent(prompt,for_print=False)
+            cmd = input()
             game_new.set_game_mode(cmd)
             misc.print_sent(f'Game mode: {game_new.game_mode}')
             misc.action_to_continue()

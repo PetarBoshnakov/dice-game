@@ -12,7 +12,7 @@ def print_sep():
     print('\n')
     print('#'*15)
 
-def print_sent(val: str, time_step: float = 0.0005):
+def print_sent(val: str, time_step: float = 0.0005, for_print: bool = True):
     '''
     Summary:
     ---
@@ -21,14 +21,18 @@ def print_sent(val: str, time_step: float = 0.0005):
     Parameters:
     ---
     val: the value to be printed
+
     time_step: the delay between each print
+
+    for_print: sets a default flag whether this should be used as normal print or before input()
 
     '''
     wds = val.split(' ')
     for wd in wds:
         print(f'{wd} ', end='', flush=True)
         time.sleep(time_step)
-    print()
+    if for_print is True:
+        print()
 
 def action_to_continue():
     '''

@@ -585,7 +585,8 @@ class CommandInterface:
 
         # type = ['num', 'bid']
 
-        cmd = input(f'{cmd_prompt}')
+        misc.print_sent(cmd_prompt, for_print=False) # input(f'{cmd_prompt}')
+        cmd = input()
         
         if cmd == 'q':
             sys.exit()
