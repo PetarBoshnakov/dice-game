@@ -36,7 +36,7 @@ def action_to_continue():
     ---
     Initiates a wait state so the player can see what happened
     '''
-    print
+    print()
     print_sent("Press enter to continue or 'q' to exit..")
     val = input('')
     if val == 'q':
