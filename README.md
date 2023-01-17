@@ -21,7 +21,7 @@ Python: 3.9 or higher
 
 Dependencies: no dependencies, packages or wheels needed 
 
-System requirements: as long as the machine can run python on a console it should be just fine
+System requirements: as long as the machine can run python on a console it should be just fine. Test pull push
 
 [^1]: The game is developed in Python so it should be platform agnostic. However, there might be some glitches when used on other operating systems when system calls are concerned.
 
