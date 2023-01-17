@@ -17,7 +17,7 @@ This game is developed as a project invitation that I found on the Strypes porta
 
 ## System Requirements
 ---
-Operating system: [^1]Windows 
+Operating system: [^1]Anything that supports Python's standard library 
 
 Python: 3.9 or higher
 
