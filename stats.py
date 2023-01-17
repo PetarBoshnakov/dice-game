@@ -60,7 +60,8 @@ def mass_prob(n, x):
     for i in range (x + 1):
         prob  = prob_cal(n, i)
         prob_mass += prob
-
+        if prob_mass > 1:
+            prob_mass = 1 
     return 1 - prob_mass
 
 
