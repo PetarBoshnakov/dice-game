@@ -110,8 +110,6 @@ The process diagram above showcaes how flow of information in the game.
     2. Receives data from Game Menu as described above
 6. Game Loop - runs the game. It makes sure that the higher level game logic is applied as well as outputs the information in a formatted way to the console
 
-
-
 ### __Useful links:__
 > [Liar's dice](https://en.wikipedia.org/wiki/Liar%27s_dice)
 
