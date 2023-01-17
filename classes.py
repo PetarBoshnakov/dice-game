@@ -429,9 +429,10 @@ class GameController():
 
         '''
 
-        if not isinstance(num, int) or num < 2:
+
+        if not isinstance(num, int) or num < 2 or num > 6:
             misc.print_sep()
-            misc.print_sent(f"Invalid number of players: {num}. The number of players must be an integer greater than 1. Number of players set to default: 2")
+            misc.print_sent(f"Invalid number of players: {num}. The number of players must be between 2 and 6. Number of players set to default: 2")
             
             self.nplayers = 2
         else:
