@@ -111,13 +111,13 @@ def play_game(game: classes.GameController):
             misc.print_sep()
             curr_player = game.get_current_player()
             curr_player_stats = game.get_player_stats(curr_player)
+            game.print_game_state()
             misc.print_sent(f"{curr_player_stats['Name']} is the winner!")
             break
         
         # print game state
         game.print_game_state()
 
-        
         # get current player input
         curr_player = game.get_current_player()
         if curr_player > 0:
@@ -129,12 +129,13 @@ def play_game(game: classes.GameController):
             else:
                 misc.print_sent(f'Bot bid ==> Face:{cmd[0]} :: Count:{cmd[1]}')
         else:
-            cmd = cmdI.get_cmd('Your bid (face, count): ', 'bid')
+            curr_turn = game.get_turn_counter()
+            cmd = cmdI.get_cmd('Your bid (face, count): ', 'bid', curr_turn)
 
         # check if the prev player is a liar and adjust dice count accordingly
-        turn_counter = game.get_turn_counter()
+        curr_turn = game.get_turn_counter()
         
-        if cmd == 'liar' and turn_counter > 0:
+        if cmd == 'liar' and curr_turn > 0:
             curr_player = game.get_current_player()
             prev_player = game.get_prev_player(curr_player)
             dice_counts = game.get_dice_stats()
@@ -153,7 +154,15 @@ def play_game(game: classes.GameController):
 
             # sets the turn counter to zero since we are dealing new hands
             if dice_counts[prev_player_face] >= prev_player_count:
+                
+                # reveal player hands
+                print()
                 misc.print_sent(f"{curr_player_stats['Name']} loses 1 die")
+                print()
+                print('Player hands:')
+                game.print_game_state(showdown=True)
+                
+                # prepare game for next round
                 game.set_dice_decr(curr_player)
                 if curr_player_stats['DiceN'] == 0:
                     game.set_next_player()
@@ -165,7 +174,13 @@ def play_game(game: classes.GameController):
                 continue
             
             else:
+                # reveal player hands
+                print()
                 misc.print_sent(f"{prev_player_stats['Name']} loses 1 die")
+                print()
+                print('Player hands:')
+                game.print_game_state(showdown=True)
+
                 game.set_dice_decr(prev_player)
                 if prev_player_stats['DiceN'] > 0:
                     game.set_prev_player()
@@ -177,13 +192,13 @@ def play_game(game: classes.GameController):
         # check for input on first round
         # if invalid input - again
         valid_bid = game.is_valid_bid(cmd, game.get_n_dice())
-        if turn_counter == 0 and valid_bid:
+        if curr_turn == 0 and valid_bid:
             game.set_player_bid(game.current_player,cmd)
             game.set_next_player()
             game.set_turn_counter_incr()
             misc.action_to_continue()
             continue
-        elif turn_counter == 0 and not valid_bid:
+        elif curr_turn == 0 and not valid_bid:
             misc.action_to_continue()
             continue
         
@@ -196,15 +211,9 @@ def play_game(game: classes.GameController):
             misc.action_to_continue()
             continue
         
-
         # continue to next player
         game.set_player_bid(game.get_current_player(),cmd)
         game.set_next_player()
         game.set_turn_counter_incr()
         misc.action_to_continue()
         
-
-
-
-
-
