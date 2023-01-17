@@ -27,6 +27,8 @@ def game_menu():
     ---
     Iterates the game menus and starts the game
     '''
+
+    # initializse the game objects
     game_menu = classes.GameMenu()
     cmd_i = classes.CommandInterface()
     game_new = classes.GameController(2)
@@ -34,6 +36,8 @@ def game_menu():
     curr_menu = game_menu.game_menu_start_screen
     path_stack = []
     push_menu(path_stack,curr_menu)
+
+    # the menu loop
     while True:
         
         misc.print_sep()
@@ -43,19 +47,20 @@ def game_menu():
         prompt = 'Please select option: '
         cmd = cmd_i.get_cmd(prompt,'num')
         
+        # loop if wrong command
         while cmd == None:
             cmd = cmd_i.get_cmd(prompt,'num')
         selection = game_menu.select_from_menu(curr_menu, cmd)
         
-
+        # New game options
         if selection == 'New game':
             push_menu(path_stack, game_menu.game_menu_new_game)
-
+        # start a new game
         elif selection == 'Start':
-
             misc.print_sent('starting game....')
             play_game(game_new) 
 
+        # set the numner of players
         elif selection == 'Number of players':
             prompt = 'Please enter the number of players (default is 2): '
             cmd = cmd_i.get_cmd(prompt, 'num')
@@ -63,6 +68,7 @@ def game_menu():
             misc.print_sent(f'Number of players: {game_new.nplayers}')
             misc.action_to_continue()
 
+        # set the game mode to wild or leave it at classic
         elif selection == 'Game mode':
             prompt = "Please enter the game mode - it can only be 'classic' or 'wild': "
             misc.print_sent(prompt,for_print=False)
@@ -71,14 +77,16 @@ def game_menu():
             misc.print_sent(f'Game mode: {game_new.game_mode}')
             misc.action_to_continue()
 
-
+        # exit the game
         elif selection == 'Exit':
             misc.print_sent('Sad to see you go ;(')
             sys.exit()
-
+        
+        # go back in the menu
         elif selection == 'Back':
             path_stack.pop()
         
+        # wrong input here
         else:
             misc.print_sent('Please select a valid menu item by inputing a menu number. For example 1 unless advised otherwise.')
             misc.action_to_continue
@@ -90,6 +98,7 @@ def play_game(game: classes.GameController):
     Runs the actual game
     '''
 
+    # ini the game objects 
     cmdI = classes.CommandInterface()
     game = classes.GameController(game.nplayers)
     game.set_start_current_player()
@@ -101,10 +110,6 @@ def play_game(game: classes.GameController):
     # game loop
     while True:
         
-        # curr_player = game.get_current_player()
-        # turn_counter = game.get_turn_counter()
-        # if curr_player != 0 and turn_counter == 0:
-        #     misc.action_to_continue()
         misc.print_sep()
 
         # check if we have a winner
@@ -119,7 +124,7 @@ def play_game(game: classes.GameController):
         # print game state
         game.print_game_state()
 
-        # get current player input
+        # get current player or bot input
         curr_player = game.get_current_player()
         if curr_player > 0:
             bot_cmd = bot.action(game)

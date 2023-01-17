@@ -15,12 +15,6 @@ class GameController():
     ---
     Tha game controller runs the game
 
-    playerStats: dictionary to hold the player stats: 
-        current bid
-            face 
-            count 
-        status call - 'bid' or 'liar'
-
     '''
 
     def __init__(self, nplayers):
@@ -33,7 +27,7 @@ class GameController():
             -Count - number of dice faces in the game
             -DiceN - current player dice
             -Hand - current player hand
-            -Status - Bid, Liar, Out, Won
+            -Status - Bid, Out
 
 
         Parameters:
@@ -45,6 +39,7 @@ class GameController():
         self.game_mode = 'classic' # classic (default) or wild
         self.game_log = []
         self.nplayers = self.set_nplayers_default(nplayers)
+        self.default_hand_size = 5
         self.ndice = nplayers * 5
         self.current_player = 0
         self.player_stats = {}
@@ -78,6 +73,7 @@ class GameController():
 
         '''
 
+        # function overloading of sorts
         if prev_player_stats == None:
             try:
                 face = bid[0]
@@ -93,9 +89,11 @@ class GameController():
                 print('the dice must have a valid side and adequate face count')
                 return False
 
+        # main starts here
         if bid == 'liar':
             return True
-
+        
+        # check logic of face and count
         try:
             current_player_face = bid[0]
             current_player_count = bid[1]
@@ -106,8 +104,7 @@ class GameController():
 
         bid_in_limit = bid[0] > 0 and bid[0] <= 6 and bid[1] > 0 and bid[1] <= ndice
         
-        # higher face
-        curr_player_face_higher = bid_in_limit and current_player_face > prev_player_face
+        # higher greater or equal face face
         curr_player_ge_face = bid_in_limit and current_player_face >= prev_player_face
         # equal faces but higher count 
         curr_player_higher_count =  bid_in_limit and curr_player_ge_face or current_player_count > prev_player_count
@@ -121,8 +118,6 @@ class GameController():
         if not curr_player_higher_count:
             misc.print_sent('current player incorrect count')
 
-
-
         return bid_in_limit and curr_player_higher_count and curr_player_ge_face
 
     def ini_players(self) -> None:    
@@ -135,7 +130,7 @@ class GameController():
         
         for i in range(1,self.nplayers + 1):
             player_x_name = Player(f'Player {i}')
-            dice_n_count = 5
+            dice_n_count = self.default_hand_size
             hand = self.game_generate_hand(dice_n_count)
             self.player_stats[i-1] = {
                 'Name': player_x_name.Name,
@@ -145,7 +140,12 @@ class GameController():
                 'Hand': hand, 
                 'Status': 'Not set'}
 
-    def get_current_player(self):
+    def get_current_player(self) -> int:
+        '''
+        Summary:
+        ---
+        Returns an integer representing the current player
+        '''
         return self.current_player
 
     def get_dice_stats(self) -> dict:
@@ -191,12 +191,12 @@ class GameController():
 
         '''
 
-        dicen = 0
+        dice_n = 0
         keys = self.player_stats.keys()
         for key in keys:
-            dicen += self.player_stats[key]['DiceN']
+            dice_n += self.player_stats[key]['DiceN']
 
-        return dicen
+        return dice_n
     
     def get_players_left(self) -> int:
         '''
@@ -205,7 +205,6 @@ class GameController():
         Returns the players left
 
         '''
-
 
         return self.players_left
 
@@ -282,10 +281,6 @@ class GameController():
 
         Parameters:
         ---
-        gameStats: the stats to be printed
-
-        currentPlayer: the current Player index - decides whose turn it is
-
         showdown: prints player hands after a liar call
 
         '''
@@ -313,7 +308,6 @@ class GameController():
                 elif showdown is True:
                     to_print = f"{to_print} ::: Hand: {self.player_stats[playerVal]['Hand']}"
                 
-
                 else:
                     to_print = f'   {to_print}'
 
@@ -433,11 +427,9 @@ class GameController():
 
         Parameters:
         ---
-
         num: the number of players 
 
         '''
-
 
         if not isinstance(num, int) or num < 2 or num > 6:
             misc.print_sep()
@@ -455,7 +447,6 @@ class GameController():
 
         Parameters:
         ---
-
         player: the player name to be updated in the stats dictionary
 
         bid: holds the bid value in a list 
@@ -475,7 +466,7 @@ class GameController():
         '''
         Summary:
         ---
-        Decrements the current players in the game
+        Decrements the number of current players in the game
 
         '''
 
@@ -585,7 +576,7 @@ class CommandInterface:
 
         # type = ['num', 'bid']
 
-        misc.print_sent(cmd_prompt, for_print=False) # input(f'{cmd_prompt}')
+        misc.print_sent(cmd_prompt, for_print=False) 
         cmd = input()
         
         if cmd == 'q':
@@ -687,7 +678,7 @@ class GameMenu:
         '''
         Summary:
         ---
-        Ini the game menu
+        Ini the game menus
         '''
 
         self.game_menu_start_screen = ['New game', 'Exit']
@@ -704,11 +695,13 @@ class GameMenu:
         ---
         menu: an array item to be selected from
 
-        selectionN: a manu number (start index 1) that indicates which menu item should be returned
+        selection_n: a manu number (start index 1) that indicates which menu item should be returned
 
         Returns:
         a menu item or None if selection is invalid
+
         '''
+
         if self.check_valid_selection(menu,selection_n):
             ret_val = selection_n - 1
             return menu[ret_val]
@@ -725,8 +718,9 @@ class GameMenu:
         ---
         menu: a valid list of items 
 
-        selectionN: a selectin number item (starting index 1) that indicates 
+        selection_n: a selectin number item (starting index 1) that indicates 
         which menu item should be returned
+
         '''
 
         len_menu = len(menu)
@@ -759,7 +753,9 @@ class Player:
         Parameters:
         ---
         name: player name
+
         '''
+        
         self.Name = name
 
 class Bot(Player):
@@ -772,8 +768,10 @@ class Bot(Player):
     def __init__(self, name: str):
         super().__init__(name)
 
-        self.false_score = {'score': 0.3, 'true': 2, 'false': 1} # holds a arbitratry value deciding how hones a player is
-    
+        self.false_score = {'score': 0.3, 'true': 2, 'false': 1} # holds a arbitratry value deciding how honest the hooman is
+        self.wild_mode_multipl = 2
+        self.risk_raise_prob = 0.4
+        self.liar_score = 0.7
 
     def is_wild_mode(self, game: GameController):
         '''
@@ -789,9 +787,6 @@ class Bot(Player):
 
     def action(self, game: GameController) -> str:
         
-        wild_mode_multipl = 2
-        risk_raise_prob = 0.4
-
         # game globals
         wild_mode = self.is_wild_mode(game)
         dice_in_game = game.get_n_dice()
@@ -808,14 +803,14 @@ class Bot(Player):
 
         curr_player_same_face_count = curr_player_stats['Hand'].count(prev_player_face)
 
-
+        # calculate expected value for the dice
         e = math.floor((1/6) * dice_in_game)
 
         # wild mode setup
         if wild_mode and prev_player_face > 1:
-            prev_player_count *= wild_mode_multipl
-            curr_player_same_face_count *= wild_mode_multipl
-            e *= wild_mode_multipl
+            prev_player_count *= self.wild_mode_multipl
+            curr_player_same_face_count *= self.wild_mode_multipl
+            e *= self.wild_mode_multipl
 
         # update player truth score        
         if prev_player_pos == 0 and game.get_turn_counter() > 0:
@@ -830,14 +825,14 @@ class Bot(Player):
 
 
         # percentage sum must be 100
-        lier_score = 0.7 # actually this is the bmot's lier score
+        liar_score = self.liar_score # actually this is the bmot's lier score
         if prev_player_pos == 0:
-           lier_score = self.false_score['score'] # here the player lier score is set
-        liar_perc = (100 - prob_prev_player_higher) * lier_score
-        risk_raise_perc = risk_raise_prob * liar_perc
+           liar_score = self.false_score['score'] # here the player lier score is set
+        liar_perc = (100 - prob_prev_player_higher) * liar_score
+        risk_raise_perc = self.risk_raise_prob * liar_perc
 
         if DEBUG_MODE == 'on':
-            misc.print_sent(f'player liar score: {lier_score}')
+            misc.print_sent(f'player liar score: {liar_score}')
             misc.print_sent(f'liar perc: {liar_perc}')
             misc.print_sent(f'player false score: {self.false_score}')
 
@@ -861,7 +856,7 @@ class Bot(Player):
             bid_face = prev_player_face            
             if target_count < dice_in_game:
                 bid_count = target_count
-        # the raise logic is here
+        # the raise logic is here, lots of ai logic..
         elif call_raise:
             curr_player_hand_limits_count = curr_player_hand_limits[prev_player_face] 
             if curr_player_same_face_count > 0 and curr_player_hand_limits_count > 0 and curr_player_same_face_count < dice_in_game:
@@ -896,6 +891,7 @@ class Bot(Player):
         Returns:
         ---
         a dictionary with the hand distirbtuion {1:2, 2:3.. etc}
+
         '''
 
         hand = player_stats['Hand']
@@ -930,6 +926,7 @@ class Bot(Player):
 
         Returns:
         None. Updates the false_score of the bot
+
         '''
 
         
@@ -939,12 +936,12 @@ class Bot(Player):
         hand_lim = self.generate_hand_limits(player_stats)
 
         if hand_lim[stated_face] >= stated_count or (hand_lim[stated_face] > 0 and stated_count <= e):
-            self.set_update_truth_score(1)
+            self.set_update_false_score(1)
         else:
-            self.set_update_truth_score(0)
+            self.set_update_false_score(0)
         
     
-    def set_update_truth_score(self, direction: int) -> None:
+    def set_update_false_score(self, direction: int) -> None:
         '''
         Summary:
         ---
@@ -955,6 +952,7 @@ class Bot(Player):
         Parameters:
         ---
         direction: 1 or 0. the number indicates pos or negative reinforcement
+
         '''
 
         if direction == 1:
@@ -988,6 +986,7 @@ class Bot(Player):
         ---
         Wastes some time to create the illusion of thought. Prints a funny phrase 
         in the process
+        
         '''
 
 
