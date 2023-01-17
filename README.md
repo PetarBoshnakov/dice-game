@@ -6,12 +6,14 @@
 1. [Rules of the game](#rules-of-the-game)
 1. [How to play the game](#how-to-play-the-game)
 1. [Design and architechture](#design-and-architecture)
+    1. [Design](#design)
+    2. [Architecture](#architecture)
 1. [Credits and Acknowledgements](#credits-and-acknowledgements)
 1. [Contact and feedback](#contact)
 
 ## About
 ---
-This game is developed as a project invitation that I found on the Strypes portal. I tried to provide a solution to a very hard problem where players are forced to use deception. More on the game can be found in the section [Rules of the game](#rules-of-the-game)
+This game is developed as a project invitation that I found on the Strypes portal. I tried to provide a solution to a very hard problem where players are forced to use deception. Of course I was having quite a lot of fun along the way and you can tell this by playing the game. More on the game can be found in the section [Rules of the game](#rules-of-the-game)
 
 ## System Requirements
 ---
@@ -23,10 +25,10 @@ Dependencies: no dependencies, packages or wheels needed
 
 System requirements: as long as the machine can run python on a console it should be just fine.
 
-[^1]: The game is developed in Python so it should be platform agnostic. However, there might be some glitches when used on other operating systems when system calls are concerned.
+[^1]: The game is developed in Python so it should be platform agnostic. However, there might be some glitches when used on other operating systems when system calls are concerned - namely clearing the console.
 
 ## How to run
-To play the game you will need to run it directly from a console. To quickly start the game you can type:
+To play the game you will need to run it directly from the console. To quickly start the game you can type:
 
 > main.py -start
 
@@ -99,7 +101,7 @@ Overview by files:
 
 ![Process Diagram](/assets/process_diag.png)
 
-The process diagram above showcaes how flow of information in the game. 
+The process diagram above showcases how information flows in the game. 
 
 1. Player and Bot feed information to the Command Line Interface class. 
 2. Purpose of the Command Line Interface is to check raw data input and make sure that this data is in correct raw data format
@@ -121,7 +123,7 @@ The process diagram above showcaes how flow of information in the game.
 
 ## Credits and Acknowledgements
 ---
-Special thanks to Dimitar Gradev and Huben Keranchev regarding their creative ideas on the code style, organization and testing. Also, absolute acknowledgements for the idea of this README file!
+Special thanks to Dimitar Gradev and Huben Keranchev regarding their creative ideas on the coding style, organization and testing. Also, absolute acknowledgements for the idea of this README file!
 
 ## Contact and feedback
 ---
