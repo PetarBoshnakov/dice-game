@@ -274,7 +274,7 @@ class GameController():
 
         return self.turn_counter
 
-    def print_game_state(self) -> None:
+    def print_game_state(self, showdown: bool = False) -> None:
         '''
         Summary:
         ---
@@ -286,9 +286,7 @@ class GameController():
 
         currentPlayer: the current Player index - decides whose turn it is
 
-        debug: debug mode - showing all player stats. Can take two values 'debug' or 'off'.
-
-        It is off by default
+        showdown: prints player hands after a liar call
 
         '''
 
@@ -300,15 +298,26 @@ class GameController():
             for cntr, playerVal in enumerate(player_vals):
                 to_print = f"{self.player_stats[playerVal]['Name']} ::: Face: {self.player_stats[playerVal]['Face']} ::: Count: {self.player_stats[playerVal]['Count']} ::: Number of Dice: {self.player_stats[playerVal]['DiceN']}"
 
-                if curr_player == cntr and curr_player == 0:
-                    to_print = f"{to_print} ::: Your dice: {self.player_stats[playerVal]['Hand']}"
-                    misc.print_sent(f'==>{to_print}')
-                elif curr_player == cntr:
-                    misc.print_sent(f'==>{to_print}')
-                elif prev_player == cntr:
-                    misc.print_sent(f'   {to_print} <== Previous Player')    
+                if curr_player == cntr and curr_player == 0 and showdown == False:
+                    to_print = f"==>{to_print} ::: Your dice: {self.player_stats[playerVal]['Hand']}"
+
+                elif curr_player == cntr and showdown == False:
+                    to_print = f'==>{to_print}'
+                    
+                elif prev_player == cntr and showdown == False:
+                    to_print = f'   {to_print} <== Previous Player'
+
+                elif showdown is True and prev_player == cntr:
+                    to_print = f"{to_print} ::: Hand: {self.player_stats[playerVal]['Hand']} <=="
+
+                elif showdown is True:
+                    to_print = f"{to_print} ::: Hand: {self.player_stats[playerVal]['Hand']}"
+                
+
                 else:
-                    misc.print_sent(f'   {to_print}')
+                    to_print = f'   {to_print}'
+
+                misc.print_sent(to_print)
 
         elif DEBUG_MODE == 'on':
             for cntr, playerVal in enumerate(player_vals):
@@ -551,7 +560,7 @@ class CommandInterface:
     reads and translates comamnds from the console
     '''
 
-    def get_cmd(self, cmd_prompt: str, type: str):
+    def get_cmd(self, cmd_prompt: str, type: str, curr_turn: int = None):
         '''
         Summary:
         ---        
@@ -565,6 +574,8 @@ class CommandInterface:
         cmdPrompt: the prompt text to display for the particular command
        
         type: the type of command as string a 'bid' or 'num'
+
+        curr_turn: int representing the current turn
 
         Returns:
         ---
@@ -583,7 +594,7 @@ class CommandInterface:
             return self.process_num(cmd)
 
         if type == 'bid':
-           return self.process_bid(cmd)
+           return self.process_bid(cmd, curr_turn)
 
     def get_bot_cmd(self, cmd: str):
         '''
@@ -626,7 +637,7 @@ class CommandInterface:
             misc.print_sent('Please provide correct number format')
             return None
 
-    def process_bid(self, cmd: str) -> list:
+    def process_bid(self, cmd: str, curr_turn: int = None) -> list:
         '''
         Summary:
         ---
@@ -637,6 +648,8 @@ class CommandInterface:
         ---
         
         cmd: the text input to be processed
+
+        curr_turn: int representing the current turn
 
         Returns:
         ---
@@ -653,12 +666,13 @@ class CommandInterface:
                 int(val)
                 valsInt.append(int(val))
             except:
+                msg = f"Wrong bid format: {cmd}. Format must be 'int int'!"
+                if curr_turn > 0:
+                    msg = f'{msg}\b or liar'
                 misc.print_sep()
-                misc.print_sent(f"Wrong bid format: {cmd}. Format must be 'int int' or 'liar' !")
+                misc.print_sent(f'{msg}')
                 return [0,0]
         return valsInt
-            
-
 
 class GameMenu:
     
@@ -983,12 +997,22 @@ class Bot(Player):
             "Waiting at the coffee que",
             "Hold my beer",
             "Ah, that's easy just need a quick permutation calculation",
-            "You gotta me kidding me",
+            "You gotta to be kidding me",
             "Got you there, bruh?",
             "You need to up your game... Calculating your chances...",
-            "A plane crashd on the border of Canada and USA. Where should the survivors be buried?",
+            "A plane crashed on the border of Canada and the USA. Where should the survivors be buried?",
             "You think I'm lying?",
-            "Not, AI but close.."
+            "Not, AI but close..",
+            "Oh, you still here?",
+            "Let me quickly check on ChatGPT",
+            "E-motional daamage",
+            "Disappointment, just like my son",
+            "Salt Bae has a new vid. Have you checked it? Oh, you bet already. Let me think",
+            "Cocky little.. Hi mom, one moment please",
+            "Bayes will probably hate me, but",
+            "Loading from predetermined datasets",
+            "My dataset's too old",
+            "Please wait patiently. It's complicated"
         ]
 
         chosen_phrase = random.choice(funny_phrases)
@@ -1002,7 +1026,7 @@ class Bot(Player):
         wait_multpl = random.randint(2,5)
         wait_fraction = random.randint(60,86) / 100
 
-        to_print = '.'*wait_multpl
+        to_print = '.' * wait_multpl
         for i in range(len(to_print)):
            print(to_print[i], end='', flush=True)
            time.sleep(wait_fraction)
