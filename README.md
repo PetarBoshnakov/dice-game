@@ -61,15 +61,18 @@ Once you are set you can hit on start game and enjoy the challenge.
 ## Design and Architecture
 ---
 
+### __Design__
+
+
 The game is developed using OOP paradigm as well as the functional programming concept. No object mutations are allowed. 
 
 Overview by files:
 
-### - main.py
-### - game.py
-### - classes.py
-### - misc.py
-### - stats.py
+#### - main.py
+#### - game.py
+#### - classes.py
+#### - misc.py
+#### - stats.py
 
 > main.py: 
 - is used for starting the game
@@ -91,8 +94,25 @@ Overview by files:
 > stats.py
 - contains the statistical functions used for the game
 
+### __Architecture__
 
-__Useful links:__
+
+![Process Diagram](/assets/process_diag.png)
+
+The process diagram above showcaes how flow of information in the game. 
+
+1. Player and Bot feed information to the Command Line Interface class. 
+2. Purpose of the Command Line Interface is to check raw data input and make sure that this data is in correct raw data format
+3. After the data is processed it can be sent to the Game Menu or Game Controller - depending on who requested it.
+4. Game Menu - sets all necessary properties of the Game Controller. This can be the number of players or the game mode
+5. Game Controller
+    1. Receives data from Command Line Interface and checks the already processed raw data for logical consistency regarding the game logic
+    2. Receives data from Game Menu as described above
+6. Game Loop - runs the game. It makes sure that the higher level game logic is applied as well as outputs the information in a formatted way to the console
+
+
+
+### __Useful links:__
 > [Liar's dice](https://en.wikipedia.org/wiki/Liar%27s_dice)
 
 > [Bayes theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem)
@@ -103,7 +123,7 @@ __Useful links:__
 
 ## Credits and Acknowledgements
 ---
-Special thanks to Dimitar Gradev and Huben Keranchev regarding their creative ideas on the code style and organization. Also, absolute acknowledgements for the idea of this README file!
+Special thanks to Dimitar Gradev and Huben Keranchev regarding their creative ideas on the code style, organization and testing. Also, absolute acknowledgements for the idea of this README file!
 
 ## Contact and feedback
 ---
